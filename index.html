@@ -3147,8 +3147,8 @@ function applyStaticTranslations() {
   const intakeRaLabel = document.getElementById('intake-ra-label');
   if (intakeRaLabel && !intakeSpeech) intakeRaLabel.textContent = t('readAloud');
   // Sync intake eyebrow
-  const intakeEyebrow = document.getElementById('intake-eyebrow-lbl');
-  if (intakeEyebrow) intakeEyebrow.textContent = t('intakeEyebrow');
+  const intakeEyebrowEl = document.getElementById('intake-eyebrow-lbl');
+  if (intakeEyebrowEl) intakeEyebrowEl.textContent = t('intakeEyebrow');
 }
 
 /* ══════════════════════════════════════════════════════════════
