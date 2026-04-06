@@ -949,6 +949,12 @@ body::before{display:none}
   outline-offset:3px;
   border-radius:var(--r);
 }
+.s-header-left.read-active{
+  outline:2.5px solid var(--gold);
+  background:rgba(122,92,14,.05);
+  border-radius:var(--r);
+  padding:.3rem .5rem;
+}
 
 /* ── TTS WORD HIGHLIGHTING ─────────────────────────────────── */
 .tts-word{
@@ -1972,7 +1978,7 @@ function buildScenario(s) {
 
   // Header
   html += `<div class="scenario-header">
-    <div class="s-header-left">
+    <div class="s-header-left" data-read-section="title">
       <div class="s-num" aria-label="Scenario ${s.id+1} ${t('scenarioOf')}">Scenario ${s.id+1} ${t('scenarioOf')}</div>
       <h2 class="s-title">${s.title}</h2>
     </div>
