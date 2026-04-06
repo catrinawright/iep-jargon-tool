@@ -1013,6 +1013,8 @@ body::before{display:none}
   padding:.3rem .5rem;
 }
 
+.quick-hidden{display:none!important}
+
 /* ── TTS WORD HIGHLIGHTING ─────────────────────────────────── */
 .tts-word{
   display:inline;border-radius:2px;
@@ -1347,6 +1349,11 @@ body::before{display:none}
         <button class="gloss-btn-header" onclick="openGlossary()" aria-label="Open full glossary">
           <em class="gloss-icon" aria-hidden="true">◈</em> <span id="hdr-gloss-lbl">Glossary</span>
         </button>
+        <button class="gloss-btn-header" onclick="printNotes()"
+          aria-label="Print your highlights and notes"
+          title="Print notes">
+          <span aria-hidden="true">⎙</span> Notes
+        </button>
       </div>
     </div>
   </header>
@@ -1457,7 +1464,13 @@ body::before{display:none}
 
     <!-- References -->
     <div id="panel-refs" aria-label="References">
-      <h2 class="refs-heading">References</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;margin-bottom:1.2rem;border-bottom:1px solid var(--border);padding-bottom:.6rem;">
+        <h2 class="refs-heading" style="border:none;margin:0;padding:0">References</h2>
+        <button class="read-aloud-btn" id="read-btn-refs" onclick="togglePageRead('refs')" aria-label="Read references aloud">
+          <span class="ra-icon" aria-hidden="true">▶</span>
+          <span class="ra-label">Read Aloud</span>
+        </button>
+      </div>
       <ul class="refs-list" id="refs-list"></ul>
     </div>
 
@@ -1501,7 +1514,13 @@ body::before{display:none}
   <div class="modal-card">
     <div class="modal-head">
       <h2 class="modal-title" id="gloss-title">◈ Legal Term Glossary</h2>
-      <button class="modal-close" onclick="closeGlossary()" aria-label="Close glossary">✕</button>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <button class="read-aloud-btn" id="read-btn-gloss" onclick="togglePageRead('gloss')" aria-label="Read glossary aloud">
+          <span class="ra-icon" aria-hidden="true">▶</span>
+          <span class="ra-label" style="font-size:.62rem">Read</span>
+        </button>
+        <button class="modal-close" onclick="closeGlossary()" aria-label="Close glossary">✕</button>
+      </div>
     </div>
     <div class="modal-search-row">
       <div class="modal-search-box">
@@ -3154,6 +3173,168 @@ function applyStaticTranslations() {
 /* ══════════════════════════════════════════════════════════════
    INIT
 ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   PAGE-LEVEL READ ALOUD (glossary, refs, search)
+══════════════════════════════════════════════════════════════ */
+const pageSpeech = { active: false, id: null };
+
+function togglePageRead(id) {
+  if (pageSpeech.active && pageSpeech.id === id) {
+    window.speechSynthesis?.cancel();
+    pageSpeech.active = false; pageSpeech.id = null;
+    updatePageReadBtn(id, 'idle');
+    return;
+  }
+  if (pageSpeech.active) {
+    window.speechSynthesis?.cancel();
+    updatePageReadBtn(pageSpeech.id, 'idle');
+  }
+  if (speech.active) stopReading(speech.scenarioId);
+  if (!window.speechSynthesis) { announce('Text-to-speech not available.'); return; }
+
+  let text = '';
+  if (id === 'gloss') {
+    const entries = document.querySelectorAll('#gloss-body .gloss-entry');
+    text = Array.from(entries).map(e => {
+      const term = e.querySelector('.ge-term')?.textContent || '';
+      const full = e.querySelector('.ge-full')?.textContent || '';
+      const def  = e.querySelector('.ge-def')?.textContent || '';
+      return `${term}. ${full}. ${def}`;
+    }).join('. ');
+    if (!text.trim()) { announce('No glossary entries to read.'); return; }
+  } else if (id === 'refs') {
+    const items = document.querySelectorAll('#refs-list .ref-item');
+    text = Array.from(items).map(el => el.textContent.trim()).join('. ');
+    if (!text.trim()) { announce('No references to read.'); return; }
+  } else if (id === 'search') {
+    const results = document.querySelectorAll('#panel-search .sri-title');
+    text = Array.from(results).map(el => el.textContent.trim()).join('. ');
+    if (!text.trim()) { announce('No search results to read.'); return; }
+  }
+
+  pageSpeech.active = true; pageSpeech.id = id;
+  updatePageReadBtn(id, 'playing');
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.93; u.pitch = 1.0; u.lang = t('langCode');
+  u.onend  = () => { pageSpeech.active = false; pageSpeech.id = null; updatePageReadBtn(id, 'idle'); };
+  u.onerror = e => { if (e.error !== 'interrupted') { pageSpeech.active = false; pageSpeech.id = null; updatePageReadBtn(id, 'idle'); }};
+  window.speechSynthesis.speak(u);
+}
+
+function updatePageReadBtn(id, state) {
+  const btnId = id === 'gloss' ? 'read-btn-gloss' : id === 'refs' ? 'read-btn-refs' : 'read-btn-search';
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const icon  = btn.querySelector('.ra-icon');
+  const label = btn.querySelector('.ra-label');
+  btn.classList.remove('ra-playing','ra-paused');
+  if (state === 'playing') {
+    btn.classList.add('ra-playing');
+    if (icon) icon.textContent = '⏸';
+    if (label) label.textContent = t('pause');
+  } else {
+    if (icon) icon.textContent = '▶';
+    if (label) label.textContent = id === 'gloss' ? 'Read' : t('readAloud');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT NOTES
+══════════════════════════════════════════════════════════════ */
+function printNotes() {
+  const highlights = document.querySelectorAll('.user-hl');
+  if (!highlights.length) {
+    announce('No highlights found. Select text and apply a highlight color first.');
+    return;
+  }
+
+  // Build a summary of all highlights grouped by scenario
+  const groups = {};
+  highlights.forEach(mark => {
+    // Find nearest scenario panel
+    const panel = mark.closest('.scenario-panel');
+    const scenarioId = panel ? panel.id : 'other';
+    const sTitle = panel
+      ? (panel.querySelector('.s-title')?.textContent || scenarioId)
+      : 'General';
+    // Find nearest card for context
+    const card = mark.closest('.card');
+    const cardLabel = card
+      ? (card.querySelector('.card-type-label')?.textContent || '')
+      : '';
+    const color = ['yellow','green','blue','pink'].find(c => mark.classList.contains('user-hl-' + c)) || 'yellow';
+    const text = mark.textContent.trim();
+    if (!groups[scenarioId]) groups[scenarioId] = { title: sTitle, items: [] };
+    groups[scenarioId].items.push({ text, color, cardLabel });
+  });
+
+  // Also collect self-check textarea notes
+  const textareas = document.querySelectorAll('.sc-textarea');
+  textareas.forEach(ta => {
+    if (!ta.value.trim()) return;
+    const panel = ta.closest('.scenario-panel');
+    const scenarioId = panel ? panel.id : 'notes';
+    const sTitle = panel
+      ? (panel.querySelector('.s-title')?.textContent || scenarioId)
+      : 'Notes';
+    if (!groups[scenarioId]) groups[scenarioId] = { title: sTitle, items: [] };
+    groups[scenarioId].items.push({ text: ta.value.trim(), color: 'note', cardLabel: 'Self-Check Notes' });
+  });
+
+  if (!Object.keys(groups).length) {
+    announce('No highlights or notes to print.');
+    return;
+  }
+
+  // Color labels for print
+  const colorLabel = { yellow: '🟡 Yellow', green: '🟢 Green', blue: '🔵 Blue', pink: '🩷 Pink', note: '📝 Note' };
+  const colorBg = { yellow:'#FEF08A', green:'#BBF7D0', blue:'#BAE6FD', pink:'#FBCFE8', note:'#F3F0FF' };
+
+  let body = '';
+  Object.values(groups).forEach(group => {
+    body += `<div class="group">
+      <h2>${group.title}</h2>`;
+    group.items.forEach(item => {
+      body += `<div class="note-item" style="background:${colorBg[item.color] || '#fff'}">
+        <div class="note-meta">${colorLabel[item.color] || ''}${item.cardLabel ? ' · ' + item.cardLabel : ''}</div>
+        <div class="note-text">${item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>`;
+    });
+    body += '</div>';
+  });
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html lang="${currentLang}"><head>
+<meta charset="UTF-8"/>
+<title>My Notes — IEP Jargon Tool</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,serif;font-size:13pt;line-height:1.65;padding:2.5cm;color:#111}
+  h1{font-size:1.5rem;font-weight:700;color:#0F2140;margin-bottom:.3rem}
+  .meta{font-size:.78rem;color:#666;margin-bottom:2rem;padding-bottom:.8rem;border-bottom:1px solid #ccc}
+  .group{margin-bottom:2rem;break-inside:avoid}
+  h2{font-size:1.1rem;font-weight:700;color:#0F2140;margin-bottom:.8rem;
+     padding:.4rem .7rem;border-left:4px solid #7A5C0E;background:#F8F4EE}
+  .note-item{margin-bottom:.6rem;padding:.65rem .85rem;border-radius:4px;
+             border:1px solid rgba(0,0,0,.1);break-inside:avoid}
+  .note-meta{font-size:.7rem;font-family:monospace;color:#555;
+             letter-spacing:.06em;text-transform:uppercase;margin-bottom:.3rem}
+  .note-text{font-size:.95rem;color:#1a1a1a;line-height:1.6}
+  .footer{margin-top:3rem;padding-top:1rem;border-top:1px solid #ccc;
+          font-size:.72rem;color:#888;font-family:monospace}
+  @media print{body{padding:1.5cm}}
+</style>
+</head><body>
+<h1>My Notes — IEP Jargon Tool</h1>
+<div class="meta">© 2026 Catrina Wright · CC BY-NC 4.0 · Printed ${new Date().toLocaleDateString()}</div>
+${body}
+<div class="footer">IEP Jargon Tool: Reentry, Records Relief &amp; IDEA Compliance Obligation · cwright.specialed@gmail.com</div>
+</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
+}
+
 /* ══════════════════════════════════════════════════════════════
    FONT SIZE CONTROL
 ══════════════════════════════════════════════════════════════ */
