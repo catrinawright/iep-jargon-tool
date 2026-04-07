@@ -207,14 +207,22 @@ body::before{display:none}
 .result-note{
   font-family:var(--body);font-size:.8rem;color:var(--muted);margin-bottom:1.4rem;
 }
-.intake-progress{
-  display:flex;gap:.5rem;justify-content:center;margin-bottom:1.6rem;
+.intake-step-indicator{
+  display:flex;align-items:center;justify-content:center;
+  gap:.35rem;margin-bottom:1.4rem;
+  font-family:var(--mono);font-size:.68rem;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);
 }
-.progress-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--border);transition:background .3s;
+.step-indicator-current{
+  color:var(--gold);font-weight:600;
 }
-.progress-dot.active{background:var(--gold)}
+.step-indicator-sep{
+  color:var(--faint);
+}
+.step-indicator-total{
+  color:var(--muted);
+}
 
 /* ══════════════════════════════════════════════════════════════
    MAIN TOOL SCREEN
@@ -1296,9 +1304,10 @@ body::before{display:none}
       <p class="intake-sub" id="intake-sub-el">Translating community need into the administrative language administrators are already legally required to understand.</p>
     </div>
     <div class="intake-body">
-      <div class="intake-progress" role="list" aria-label="Steps">
-        <div class="progress-dot active" role="listitem" aria-label="Step 1 of 2"></div>
-        <div class="progress-dot" role="listitem" aria-label="Step 2 of 2"></div>
+      <div class="intake-step-indicator" role="status" aria-live="polite" id="step-indicator">
+        <span class="step-indicator-current">Step 1</span>
+        <span class="step-indicator-sep">of</span>
+        <span class="step-indicator-total">2</span>
       </div>
 
       <!-- Step 1 -->
@@ -2733,13 +2742,15 @@ function selectStep2(btn) {
 function goStep2() {
   document.getElementById('intake-step-1').classList.remove('active');
   document.getElementById('intake-step-2').classList.add('active');
-  document.querySelectorAll('.progress-dot')[1].classList.add('active');
+  const si = document.getElementById('step-indicator');
+  if (si) si.querySelector('.step-indicator-current').textContent = 'Step 2';
 }
 
 function goStep1() {
   document.getElementById('intake-step-2').classList.remove('active');
   document.getElementById('intake-step-1').classList.add('active');
-  document.querySelectorAll('.progress-dot')[1].classList.remove('active');
+  const si2 = document.getElementById('step-indicator');
+  if (si2) si2.querySelector('.step-indicator-current').textContent = 'Step 1';
   intakeScenario = null;
   document.getElementById('step2-next').disabled = true;
 }
@@ -3675,9 +3686,8 @@ function goHome() {
   });
   document.getElementById('step1-next').disabled = true;
   document.getElementById('step2-next').disabled = true;
-  document.querySelectorAll('.progress-dot').forEach((d,i) => {
-    d.classList.toggle('active', i === 0);
-  });
+  const si3 = document.getElementById('step-indicator');
+  if (si3) si3.querySelector('.step-indicator-current').textContent = 'Step 1';
   intakeRole = null; intakeScenario = null; routedScenario = null;
   // Show intake, hide tool
   document.getElementById('screen-tool').classList.remove('active');
