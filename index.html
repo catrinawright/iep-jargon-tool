@@ -14,7 +14,6 @@
 /* ── RESET & VARIABLES ─────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --font-scale: 1;
   --navy:      #F8F4EE;  /* page bg — warm parchment */
   --navy-2:    #FFFFFF;  /* card bg — clean white */
   --navy-3:    #F2EDE4;  /* subtle section bg */
@@ -67,37 +66,8 @@ body{
 .skip-link:focus{transform:translateX(-50%) translateY(0)}
 button{cursor:pointer}
 
-/* ── FONT SCALING ──────────────────────────────────────────── */
-body{ font-size: calc(15px * var(--font-scale)); }
-.card-body, .step-text, .byb-block-text, .intake-opt-text,
-.result-route, .sc-prompt, .ge-def, .tt-def, .sri-excerpt,
-.ref-item, .footer-license, .mt-disc-body, .framing-text,
-.gloss-entry .ge-def { font-size: calc(.88rem * var(--font-scale)); }
-.s-title { font-size: calc(clamp(1.35rem,2.5vw,1.9rem) * var(--font-scale)); }
-.intake-title { font-size: calc(1.9rem * var(--font-scale)); }
-.tool-title { font-size: calc(clamp(1.5rem,3vw,2.4rem) * var(--font-scale)); }
-h1, h2, .refs-heading, .search-heading { font-size: calc(1em * var(--font-scale)); }
-.card-type-label, .byb-label, .sc-label, .framing-label,
-.mt-disc-label, .ey, .step-num { font-size: calc(.65rem * var(--font-scale)); }
 
-/* Font size toggle buttons */
-.font-size-toggle{
-  display:flex;align-items:center;
-  border:1px solid var(--border);border-radius:var(--r);
-  overflow:hidden;flex-shrink:0;
-}
-.fs-btn{
-  background:none;border:none;
-  padding:.4rem .7rem;
-  font-family:var(--serif);letter-spacing:.02em;
-  color:var(--muted);transition:all .15s;
-  line-height:1;
-}
-.fs-btn:nth-child(1){ font-size:.78rem; }
-.fs-btn:nth-child(2){ font-size:.92rem; border-left:1px solid var(--border); border-right:1px solid var(--border); }
-.fs-btn:nth-child(3){ font-size:1.08rem; }
-.fs-btn:hover{ background:var(--blue-faint);color:var(--blue); }
-.fs-btn.active{ background:var(--navy-4);color:var(--bright);font-weight:600; }
+
 
 /* ── SUBTLE PAPER TEXTURE ──────────────────────────────────── */
 body::before{display:none}
@@ -142,13 +112,7 @@ body::before{display:none}
 .intake-read-btn:hover{border-color:var(--blue);color:var(--blue)}
 .intake-read-btn.ra-playing{background:rgba(29,78,216,.08);border-color:var(--blue);color:var(--blue)}
 .intake-read-btn.ra-paused{background:var(--amber-faint);border-color:var(--amber);color:var(--amber)}
-.nav-home-btn{
-  background:none;border:none;border-right:1px solid var(--border);
-  padding:.7rem .9rem;
-  font-size:1rem;color:var(--muted);
-  transition:color .2s;flex-shrink:0;
-}
-.nav-home-btn:hover{color:var(--gold)}
+
 .intake-banner::after{
   content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--gold) 40%,var(--blue) 70%,transparent);
@@ -291,8 +255,31 @@ body::before{display:none}
   font-size:.82rem;color:var(--muted);font-style:italic;
   margin-top:.35rem;font-weight:300;
 }
-.tool-header-actions{
-  display:flex;gap:.6rem;align-items:center;flex-shrink:0;margin-top:.3rem;
+.tool-header-inner{padding-bottom:.5rem}
+.tool-toolbar{
+  display:flex;align-items:center;gap:.35rem;
+  padding:.55rem 2rem .55rem;
+  border-top:1px solid var(--border);
+  background:linear-gradient(to bottom,var(--navy) 0%,var(--navy-3) 100%);
+  overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;
+}
+.tool-toolbar::-webkit-scrollbar{display:none}
+.tb-btn{
+  background:var(--navy-2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:.38rem .75rem;
+  display:flex;align-items:center;gap:.35rem;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.07em;
+  color:var(--muted);white-space:nowrap;
+  transition:all .2s;flex-shrink:0;
+}
+.tb-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-faint)}
+.tb-home{background:var(--navy-3)}
+.tb-label{font-family:var(--mono);font-size:.68rem}
+.tb-divider{
+  width:1px;height:20px;background:var(--border);
+  flex-shrink:0;margin:0 .1rem;
 }
 .view-toggle{
   display:flex;
@@ -364,8 +351,9 @@ body::before{display:none}
 /* Nav tabs */
 .nav-tabs{
   display:flex;flex:1;overflow-x:auto;
-  scrollbar-width:none;
+  scrollbar-width:none;min-width:0;
 }
+.nav-tabs>*{flex-shrink:0}
 .nav-tabs::-webkit-scrollbar{display:none}
 .nav-tab{
   background:none;border:none;
@@ -1136,6 +1124,21 @@ body::before{display:none}
 }
 .mt-disc-toggle:hover{color:var(--gold)}
 
+
+.ge-entry-head{
+  display:flex;align-items:flex-start;
+  justify-content:space-between;gap:.5rem;
+  margin-bottom:.35rem;
+}
+.ge-speak-btn{
+  background:var(--navy-3);border:1px solid var(--border);
+  border-radius:4px;padding:.25rem .5rem;
+  font-size:.72rem;color:var(--muted);
+  flex-shrink:0;margin-top:.1rem;
+  transition:all .2s;white-space:nowrap;
+}
+.ge-speak-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-faint)}
+.ge-speak-btn.speaking{border-color:var(--blue);color:var(--blue);background:var(--blue-faint)}
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--navy)}
@@ -1188,15 +1191,7 @@ body::before{display:none}
       <div class="intake-banner-top">
         <div class="intake-eyebrow" id="intake-eyebrow-lbl">IEP Compliance Decision Tool · Transition-Age Programs</div>
         <div class="intake-header-actions">
-          <div class="font-size-toggle" role="group" aria-label="Text size">
-          <button class="fs-btn" onclick="setFontSize(1)"
-            aria-label="Normal text size" title="Normal">A</button>
-          <button class="fs-btn" onclick="setFontSize(1.2)"
-            aria-label="Large text size" title="Large">A</button>
-          <button class="fs-btn" onclick="setFontSize(1.45)"
-            aria-label="Extra large text size" title="Extra large">A</button>
-        </div>
-        <div class="lang-selector" role="group" aria-label="Language / Idioma">
+          <div class="lang-selector" role="group" aria-label="Language / Idioma">
             <button class="lang-btn active" id="intake-lang-en" onclick="setLanguage('en')"
               aria-pressed="true" aria-label="English">
               <em class="lang-flag" aria-hidden="true">🇺🇸</em> EN
@@ -1325,45 +1320,47 @@ body::before{display:none}
         <h1 class="tool-title">IEP Jargon Tool: Reentry &amp; <em>Records Relief</em></h1>
         <p class="tool-sub">For school administrators and compliance officers — translating community need into IDEA compliance obligation.</p>
       </div>
-      <div class="tool-header-actions">
-        <div class="lang-selector" role="group" aria-label="Language / Idioma">
-          <button class="lang-btn active" id="lang-en" onclick="setLanguage('en')"
-            aria-pressed="true" aria-label="English">
-            <em class="lang-flag" aria-hidden="true">🇺🇸</em> EN
-          </button>
-          <button class="lang-btn" id="lang-es" onclick="setLanguage('es')"
-            aria-pressed="false" aria-label="Español">
-            <em class="lang-flag" aria-hidden="true">🇲🇽</em> ES
-          </button>
-        </div>
-        <div class="view-toggle" role="group" aria-label="View mode">
-          <button class="view-btn active" id="btn-brief" onclick="setView('brief')"
-            aria-pressed="true" title="Full Brief — complete legal framework">
-            ≡ Full Brief
-          </button>
-          <button class="view-btn" id="btn-quick" onclick="setView('quick')"
-            aria-pressed="false" title="Quick View — headline and top step only">
-            ⚡ Quick View
-          </button>
-        </div>
-        <button class="gloss-btn-header" onclick="openGlossary()" aria-label="Open full glossary">
-          <em class="gloss-icon" aria-hidden="true">◈</em> <span id="hdr-gloss-lbl">Glossary</span>
+    </div>
+    <!-- Toolbar row — all controls in one scrollable strip -->
+    <div class="tool-toolbar" role="toolbar" aria-label="Tool controls">
+      <button class="tb-btn tb-home" onclick="goHome()" aria-label="Return to start">
+        <span aria-hidden="true">⌂</span><span class="tb-label">Home</span>
+      </button>
+      <div class="tb-divider" aria-hidden="true"></div>
+      <div class="lang-selector" role="group" aria-label="Language / Idioma">
+        <button class="lang-btn active" id="lang-en" onclick="setLanguage('en')"
+          aria-pressed="true" aria-label="English">
+          <em class="lang-flag" aria-hidden="true">🇺🇸</em> EN
         </button>
-        <button class="gloss-btn-header" onclick="printNotes()"
-          aria-label="Print your highlights and notes"
-          title="Print notes">
-          <span aria-hidden="true">⎙</span> Notes
+        <button class="lang-btn" id="lang-es" onclick="setLanguage('es')"
+          aria-pressed="false" aria-label="Español">
+          <em class="lang-flag" aria-hidden="true">🇲🇽</em> ES
         </button>
       </div>
+      <div class="tb-divider" aria-hidden="true"></div>
+      <div class="view-toggle" role="group" aria-label="View mode">
+        <button class="view-btn active" id="btn-brief" onclick="setView('brief')"
+          aria-pressed="true" title="Full Brief — complete legal framework">
+          ≡ Full Brief
+        </button>
+        <button class="view-btn" id="btn-quick" onclick="setView('quick')"
+          aria-pressed="false" title="Quick View — headline and top step only">
+          ⚡ Quick View
+        </button>
+      </div>
+      <div class="tb-divider" aria-hidden="true"></div>
+      <button class="tb-btn" onclick="openGlossary()" aria-label="Open full glossary">
+        <span aria-hidden="true">◈</span><span class="tb-label" id="hdr-gloss-lbl">Glossary</span>
+      </button>
+      <button class="tb-btn" onclick="printNotes()"
+        aria-label="Print your highlights and notes">
+        <span aria-hidden="true">⎙</span><span class="tb-label">Notes</span>
+      </button>
     </div>
   </header>
 
   <nav id="tool-nav" aria-label="Scenario navigation">
     <div class="nav-inner">
-      <button class="nav-home-btn" onclick="goHome()"
-        aria-label="Return to start">
-        <span aria-hidden="true">⌂</span>
-      </button>
       <div class="nav-search-wrap" role="search" aria-label="Search scenarios">
         <div class="nav-search-box">
           <span class="search-icon" aria-hidden="true">🔍</span>
@@ -2312,14 +2309,25 @@ function renderGlossary(query) {
     body.innerHTML = `<p class="no-results" style="text-align:center;padding:2rem;font-style:italic;color:var(--muted)">${t('noResults')}</p>`;
     return;
   }
-  body.innerHTML = entries.map(g => `
+  body.innerHTML = entries.map((g, i) => `
     <div class="gloss-entry">
-      <div class="ge-term">${g.term}</div>
-      <div class="ge-full">${g.full}</div>
+      <div class="ge-entry-head">
+        <div>
+          <div class="ge-term">${g.term}</div>
+          <div class="ge-full">${g.full}</div>
+        </div>
+        <button class="ge-speak-btn" onclick="speakGlossEntry(${i})"
+          aria-label="Read aloud: ${g.term}"
+          title="Read aloud" data-idx="${i}">
+          <span aria-hidden="true">▶</span>
+        </button>
+      </div>
       <div class="ge-def">${g.def}</div>
       ${g.cite ? `<div class="ge-cite">${g.cite}</div>` : ''}
     </div>
   `).join('');
+  // Store rendered entries for speak function
+  window._glossEntries = entries;
 }
 
 function openGlossary(key) {
@@ -3174,6 +3182,36 @@ function applyStaticTranslations() {
    INIT
 ══════════════════════════════════════════════════════════════ */
 /* ══════════════════════════════════════════════════════════════
+   PER-ENTRY GLOSSARY SPEAK
+══════════════════════════════════════════════════════════════ */
+let _activeGlossBtn = null;
+
+function speakGlossEntry(idx) {
+  // Stop any current speech
+  window.speechSynthesis?.cancel();
+  if (_activeGlossBtn) {
+    _activeGlossBtn.classList.remove('speaking');
+    _activeGlossBtn.querySelector('span').textContent = '▶';
+  }
+  const entries = window._glossEntries || Object.values(getGlossary());
+  const g = entries[idx];
+  if (!g) return;
+  const btn = document.querySelector(`.ge-speak-btn[data-idx="${idx}"]`);
+  const text = `${g.term}. ${g.full}. ${g.def}${g.cite ? '. Citation: ' + g.cite : ''}.`;
+  if (!window.speechSynthesis) { announce('Text-to-speech not available.'); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.93; u.pitch = 1.0; u.lang = t('langCode');
+  if (btn) {
+    btn.classList.add('speaking');
+    btn.querySelector('span').textContent = '⏸';
+    _activeGlossBtn = btn;
+  }
+  u.onend  = () => { if (btn) { btn.classList.remove('speaking'); btn.querySelector('span').textContent = '▶'; } _activeGlossBtn = null; };
+  u.onerror = e => { if (e.error !== 'interrupted' && btn) { btn.classList.remove('speaking'); btn.querySelector('span').textContent = '▶'; } _activeGlossBtn = null; };
+  window.speechSynthesis.speak(u);
+}
+
+/* ══════════════════════════════════════════════════════════════
    PAGE-LEVEL READ ALOUD (glossary, refs, search)
 ══════════════════════════════════════════════════════════════ */
 const pageSpeech = { active: false, id: null };
@@ -3333,27 +3371,6 @@ ${body}
 </body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 400);
-}
-
-/* ══════════════════════════════════════════════════════════════
-   FONT SIZE CONTROL
-══════════════════════════════════════════════════════════════ */
-let currentFontScale = 1;
-
-function setFontSize(scale) {
-  currentFontScale = scale;
-  document.documentElement.style.setProperty('--font-scale', scale);
-  // Update all fs-btn active states
-  document.querySelectorAll('.fs-btn').forEach((btn, i) => {
-    const scales = [1, 1.2, 1.45];
-    btn.classList.toggle('active', scales[i % 3] === scale);
-  });
-  announce(
-    scale === 1    ? 'Text size: Normal'      :
-    scale === 1.2  ? 'Text size: Large'       :
-                     'Text size: Extra large',
-    'polite'
-  );
 }
 
 /* ══════════════════════════════════════════════════════════════
