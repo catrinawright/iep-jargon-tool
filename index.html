@@ -1013,6 +1013,17 @@ body::before{display:none}
 }
 
 .quick-hidden{display:none!important}
+.quick-banner{
+  display:flex;align-items:center;gap:.6rem;
+  background:rgba(122,92,14,.07);
+  border:1px solid rgba(122,92,14,.25);
+  border-radius:var(--r);
+  padding:.55rem .9rem;
+  margin-bottom:1rem;
+  font-family:var(--mono);font-size:.68rem;
+  color:var(--gold);letter-spacing:.04em;
+  line-height:1.5;
+}
 
 /* ── CLICK-TO-READ MODE ────────────────────────────────── */
 .ctr-mode .ctr-target{
@@ -2159,11 +2170,11 @@ function renderScenarios() {
 
 function buildScenario(s) {
   const isQuick = viewMode === 'quick';
-  const quickClass = isQuick ? ' quick-hidden' : '';
+  const hide = isQuick ? ' quick-hidden' : '';
 
   let html = '';
 
-  // Header
+  // ── Header (always visible) ──────────────────────────────
   html += `<div class="scenario-header">
     <div class="s-header-left" data-read-section="title">
       <div class="s-num" aria-label="Scenario ${s.id+1} ${t('scenarioOf')}">Scenario ${s.id+1} ${t('scenarioOf')}</div>
@@ -2183,7 +2194,7 @@ function buildScenario(s) {
     </div>
   </div>`;
 
-  // Framing note (Scenario 5)
+  // ── Framing note (Scenario 5 only) ───────────────────────
   if (s.framingNote) {
     html += `<div class="framing-note" role="note">
       <em class="framing-icon" aria-hidden="true">⚠</em>
@@ -2194,45 +2205,50 @@ function buildScenario(s) {
     </div>`;
   }
 
-  // Main grid
-  html += `<div class="s-grid">`;
+  // ── Quick View banner ─────────────────────────────────────
+  if (isQuick) {
+    html += `<div class="quick-banner" role="note" aria-label="Quick View active">
+      <span aria-hidden="true">⚡</span>
+      <span>${t('quickBannerText') || 'Quick View — showing situation and first steps only. Switch to Full Brief for complete legal framework.'}</span>
+    </div>`;
+  }
 
-  // Scenario card
-  html += `<div class="card card-scenario" role="region"
-    aria-label="${t('cardSituation')}" data-read-section="0">
-    <div class="card-head">
-      <span class="card-type-icon" aria-hidden="true"></span>
-      <span class="card-type-label">${t('cardSituation')}</span>
+  // ── Situation card (always visible) ──────────────────────
+  html += `<div class="s-grid">
+    <div class="card card-scenario" role="region"
+      aria-label="${t('cardSituation')}" data-read-section="0">
+      <div class="card-head">
+        <span class="card-type-icon" aria-hidden="true"></span>
+        <span class="card-type-label">${t('cardSituation')}</span>
+      </div>
+      <div class="card-body ctr-target"><p role="text">${processText(s.scenario)}</p></div>
     </div>
-    <div class="card-body ctr-target"><p role="text">${processText(s.scenario)}</p></div>
-  </div>`;
 
-  // Terms card
-  html += `<div class="card card-terms" role="region"
-    aria-label="${t('cardTerms')}" data-read-section="1">
-    <div class="card-head">
-      <span class="card-type-icon" aria-hidden="true"></span>
-      <span class="card-type-label">${t('cardTerms')}</span>
-    </div>
-    <div class="card-body">
-      <div class="terms-list">`;
-  s.terms.forEach(t => {
+    <!-- Terms card — hidden in Quick View -->
+    <div class="card card-terms${hide}" role="region"
+      aria-label="${t('cardTerms')}" data-read-section="1"
+      aria-hidden="${isQuick}">
+      <div class="card-head">
+        <span class="card-type-icon" aria-hidden="true"></span>
+        <span class="card-type-label">${t('cardTerms')}</span>
+      </div>
+      <div class="card-body">
+        <div class="terms-list">`;
+  s.terms.forEach(tt => {
     html += `<div class="term-item" tabindex="0" role="button"
-      aria-label="Define ${t.label}"
-      onclick="showGlossEntry('${t.key}')"
-      onkeydown="if(event.key==='Enter'||event.key===' '){showGlossEntry('${t.key}')}">
-      <div class="term-name">${t.label}
+      aria-label="Define ${tt.label}"
+      onclick="showGlossEntry('${tt.key}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){showGlossEntry('${tt.key}')}">
+      <div class="term-name">${tt.label}
         <span class="define-hint" aria-hidden="true">define</span>
       </div>
-      <div class="term-cite">${t.cite}</div>
+      <div class="term-cite">${tt.cite}</div>
     </div>`;
   });
-  html += `</div></div></div>`;
+  html += `</div></div></div></div>`; // close terms, s-grid
 
-  html += `</div>`; // end main grid
-
-  // Definition — hidden in quick mode
-  html += `<div class="s-grid full${quickClass}" aria-hidden="${isQuick}">
+  // ── Definition — hidden in Quick View ────────────────────
+  html += `<div class="s-grid full${hide}" aria-hidden="${isQuick}">
     <div class="card card-definition" role="region"
       aria-label="${t('cardDefinition')}" data-read-section="2">
       <div class="card-head">
@@ -2243,8 +2259,8 @@ function buildScenario(s) {
     </div>
   </div>`;
 
-  // Obligation — hidden in quick mode
-  html += `<div class="s-grid full${quickClass}" aria-hidden="${isQuick}">
+  // ── Obligation — hidden in Quick View ─────────────────────
+  html += `<div class="s-grid full${hide}" aria-hidden="${isQuick}">
     <div class="card card-obligation" role="region"
       aria-label="${t('cardObligation')}" data-read-section="3">
       <div class="card-head">
@@ -2255,7 +2271,7 @@ function buildScenario(s) {
     </div>
   </div>`;
 
-  // Steps
+  // ── Steps — first 2 in Quick View, all in Full Brief ──────
   html += `<div class="s-grid full">
     <div class="card card-steps" role="region"
       aria-label="${t('cardSteps')}" data-read-section="4">
@@ -2273,17 +2289,17 @@ function buildScenario(s) {
     </div>`;
   });
   if (isQuick && s.steps.length > 2) {
-    html += `<div class="step-item ctr-target" style="opacity:.5">
+    html += `<div class="step-item" style="opacity:.5">
       <span class="step-num" aria-hidden="true">…</span>
       <span class="step-text" style="font-style:italic;color:var(--muted)">
-        ${s.steps.length - 2} ${t('moreSteps')}
+        ${s.steps.length - 2} ${t('moreSteps')} — switch to Full Brief to see all
       </span>
     </div>`;
   }
   html += `</div></div></div></div>`;
 
-  // Resource
-  html += `<div class="s-grid full">
+  // ── Resource — hidden in Quick View ───────────────────────
+  html += `<div class="s-grid full${hide}" aria-hidden="${isQuick}">
     <div class="card card-resource" role="region"
       aria-label="${t('cardResource')}" data-read-section="5">
       <div class="card-head">
@@ -2306,9 +2322,10 @@ function buildScenario(s) {
     </div>
   </div>`;
 
-  // Self-check
-  html += `<details class="self-check" id="sc-${s.id}"
-    aria-label="${t('selfCheckLabel')} — Scenario ${s.id+1}">
+  // ── Self-check — hidden in Quick View ─────────────────────
+  html += `<details class="self-check${hide}" id="sc-${s.id}"
+    aria-label="${t('selfCheckLabel')} — Scenario ${s.id+1}"
+    aria-hidden="${isQuick}">
     <summary>
       <em class="sc-icon" aria-hidden="true">◎</em>
       <span class="sc-label">${t('selfCheckLabel')}</span>
@@ -2327,6 +2344,7 @@ function buildScenario(s) {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   TOOLTIP SYSTEM/* ══════════════════════════════════════════════════════════════
    TOOLTIP SYSTEM
 ══════════════════════════════════════════════════════════════ */
 const tooltip = document.getElementById('tooltip');
