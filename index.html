@@ -87,30 +87,30 @@ body::before{display:none}
   border-radius:10px;
   width:100%;max-width:660px;
   overflow:hidden;
-  box-shadow:0 8px 40px rgba(15,33,64,.12),0 2px 8px rgba(15,33,64,.06);
+  box-shadow:0 4px 24px rgba(15,33,64,.09),0 1px 4px rgba(15,33,64,.05);
 }
 .intake-banner{
   background:linear-gradient(135deg,#EDE5D8 0%,var(--navy-3) 100%);
-  padding:2rem 2.2rem 1.6rem;
+  padding:1.6rem 2.2rem 1.8rem;
   border-bottom:1px solid var(--border);
   position:relative;overflow:hidden;
 }
 .intake-banner-top{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:1rem;flex-wrap:wrap;margin-bottom:.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;margin-bottom:.8rem;
 }
 .intake-header-actions{
   display:flex;align-items:center;gap:.5rem;flex-shrink:0;
 }
 .intake-read-btn{
-  background:var(--navy-3);border:1px solid var(--border);
+  background:transparent;border:1px solid rgba(122,92,14,.35);
   border-radius:var(--r);padding:.38rem .8rem;
   font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;
-  color:var(--muted);display:flex;align-items:center;gap:.35rem;
+  color:var(--gold);display:flex;align-items:center;gap:.35rem;
   transition:all .2s;white-space:nowrap;
 }
-.intake-read-btn:hover{border-color:var(--blue);color:var(--blue)}
-.intake-read-btn.ra-playing{background:rgba(29,78,216,.08);border-color:var(--blue);color:var(--blue)}
+.intake-read-btn:hover{background:var(--gold-faint);border-color:var(--gold)}
+.intake-read-btn.ra-playing{background:var(--gold-faint);border-color:var(--gold);color:var(--gold)}
 .intake-read-btn.ra-paused{background:var(--amber-faint);border-color:var(--amber);color:var(--amber)}
 
 .intake-banner::after{
@@ -1014,6 +1014,43 @@ body::before{display:none}
 
 .quick-hidden{display:none!important}
 
+/* ── CLICK-TO-READ MODE ────────────────────────────────── */
+.ctr-mode .ctr-target{
+  cursor:pointer;
+  border-radius:3px;
+  transition:background .15s,outline .15s;
+  position:relative;
+}
+.ctr-mode .ctr-target:hover{
+  background:rgba(122,92,14,.07);
+  outline:1.5px dashed rgba(122,92,14,.4);
+  outline-offset:2px;
+}
+.ctr-mode .ctr-target.ctr-reading{
+  background:rgba(254,240,138,.45);
+  outline:2px solid var(--gold);
+  outline-offset:2px;
+}
+.ctr-mode .ctr-target::after{
+  content:'▶';
+  position:absolute;
+  right:-1.1rem;top:50%;transform:translateY(-50%);
+  font-size:.55rem;color:rgba(122,92,14,.5);
+  pointer-events:none;
+  opacity:0;transition:opacity .15s;
+}
+.ctr-mode .ctr-target:hover::after{opacity:1}
+.ctr-mode .ctr-target.ctr-reading::after{
+  content:'⏸';opacity:1;color:var(--gold);
+}
+/* Tap-to-Read button active state */
+.tb-btn.ctr-active{
+  background:var(--gold-faint);
+  border-color:var(--gold);
+  color:var(--gold);
+  font-weight:600;
+}
+
 /* ── TTS WORD HIGHLIGHTING ─────────────────────────────────── */
 .tts-word{
   display:inline;border-radius:2px;
@@ -1104,8 +1141,8 @@ body::before{display:none}
 }
 .lang-btn:hover{background:var(--blue-faint);color:var(--blue)}
 .lang-btn.active{
-  background:var(--blue);color:#fff;
-  font-weight:500;
+  background:var(--gold);color:var(--navy);
+  font-weight:600;
 }
 .lang-btn + .lang-btn{border-left:1px solid var(--border)}
 .lang-flag{font-style:normal;font-size:.9rem}
@@ -1232,11 +1269,11 @@ body::before{display:none}
           <div class="lang-selector" role="group" aria-label="Language / Idioma">
             <button class="lang-btn active" id="intake-lang-en" onclick="setLanguage('en')"
               aria-pressed="true" aria-label="English">
-              <em class="lang-flag" aria-hidden="true">🇺🇸</em> EN
+              EN
             </button>
             <button class="lang-btn" id="intake-lang-es" onclick="setLanguage('es')"
               aria-pressed="false" aria-label="Español">
-              <em class="lang-flag" aria-hidden="true">🇲🇽</em> ES
+              ES
             </button>
           </div>
           <button class="intake-read-btn" id="intake-read-btn"
@@ -1263,22 +1300,22 @@ body::before{display:none}
         <div class="intake-options" id="step1-opts">
           <button class="intake-opt" data-val="admin" onclick="selectStep1(this)">
             <span class="intake-opt-icon" aria-hidden="true">🏛</span>
-            <div><div class="intake-opt-text">School Administrator / LEA Representative</div>
+            <div><div class="intake-opt-text ctr-target">School Administrator / LEA Representative</div>
             <div class="intake-opt-sub">Responsible for committing school resources at IEP meetings</div></div>
           </button>
           <button class="intake-opt" data-val="teacher" onclick="selectStep1(this)">
             <span class="intake-opt-icon" aria-hidden="true">🎓</span>
-            <div><div class="intake-opt-text">Special Education Teacher or Transition Specialist</div>
+            <div><div class="intake-opt-text ctr-target">Special Education Teacher or Transition Specialist</div>
             <div class="intake-opt-sub">Supporting IEP development and transition planning</div></div>
           </button>
           <button class="intake-opt" data-val="compliance" onclick="selectStep1(this)">
             <span class="intake-opt-icon" aria-hidden="true">📋</span>
-            <div><div class="intake-opt-text">Compliance Officer or District Coordinator</div>
+            <div><div class="intake-opt-text ctr-target">Compliance Officer or District Coordinator</div>
             <div class="intake-opt-sub">Reviewing IEPs for legal compliance or procedural accuracy</div></div>
           </button>
           <button class="intake-opt" data-val="other" onclick="selectStep1(this)">
             <span class="intake-opt-icon" aria-hidden="true">◦</span>
-            <div><div class="intake-opt-text">Other / I want to explore all scenarios</div></div>
+            <div><div class="intake-opt-text ctr-target">Other / I want to explore all scenarios</div></div>
           </button>
         </div>
         <div class="intake-actions">
@@ -1296,32 +1333,32 @@ body::before{display:none}
         <div class="intake-options" id="step2-opts">
           <button class="intake-opt" data-scenario="0" onclick="selectStep2(this)">
             <span class="intake-opt-icon" aria-hidden="true">💼</span>
-            <div><div class="intake-opt-text">A student's employment goal may be blocked by a criminal record</div>
+            <div><div class="intake-opt-text ctr-target">A student's employment goal may be blocked by a criminal record</div>
             <div class="intake-opt-sub">Scenario 1 — FAPE, Postsecondary Goals, Transition Assessment</div></div>
           </button>
           <button class="intake-opt" data-scenario="1" onclick="selectStep2(this)">
             <span class="intake-opt-icon" aria-hidden="true">🏠</span>
-            <div><div class="intake-opt-text">Independent living or community participation goals haven't addressed record barriers</div>
+            <div><div class="intake-opt-text ctr-target">Independent living or community participation goals haven't addressed record barriers</div>
             <div class="intake-opt-sub">Scenario 2 — Transition Services, Community Experiences</div></div>
           </button>
           <button class="intake-opt" data-scenario="2" onclick="selectStep2(this)">
             <span class="intake-opt-icon" aria-hidden="true">⚖</span>
-            <div><div class="intake-opt-text">Unsure whether connecting students to expungement resources is within school scope</div>
+            <div><div class="intake-opt-text ctr-target">Unsure whether connecting students to expungement resources is within school scope</div>
             <div class="intake-opt-sub">Scenario 3 — Participating Agency, WIOA Pre-ETS Self-Advocacy</div></div>
           </button>
           <button class="intake-opt" data-scenario="3" onclick="selectStep2(this)">
             <span class="intake-opt-icon" aria-hidden="true">📅</span>
-            <div><div class="intake-opt-text">A student has turned 18 and their legal status hasn't been discussed</div>
+            <div><div class="intake-opt-text ctr-target">A student has turned 18 and their legal status hasn't been discussed</div>
             <div class="intake-opt-sub">Scenario 4 — Transfer of Rights, Procedural Safeguards</div></div>
           </button>
           <button class="intake-opt" data-scenario="4" onclick="selectStep2(this)">
             <span class="intake-opt-icon" aria-hidden="true">🚨</span>
-            <div><div class="intake-opt-text">A criminal record is being raised in a placement or setting discussion</div>
+            <div><div class="intake-opt-text ctr-target">A criminal record is being raised in a placement or setting discussion</div>
             <div class="intake-opt-sub">Scenario 5 — LRE, FAPE, Due Process</div></div>
           </button>
           <button class="intake-opt" data-scenario="-1" onclick="selectStep2(this)">
             <span class="intake-opt-icon" aria-hidden="true">◦</span>
-            <div><div class="intake-opt-text">I want to review all scenarios</div></div>
+            <div><div class="intake-opt-text ctr-target">I want to review all scenarios</div></div>
           </button>
         </div>
         <div class="intake-actions">
@@ -1336,8 +1373,8 @@ body::before{display:none}
       <div class="intake-step" id="intake-result">
         <div class="intake-result">
           <span class="result-icon" aria-hidden="true">✦</span>
-          <h2 class="result-heading" id="result-heading">Routing you to your scenario</h2>
-          <p class="result-route" id="result-route"></p>
+          <h2 class="result-heading ctr-target" id="result-heading">Routing you to your scenario</h2>
+          <p class="result-route ctr-target" id="result-route"></p>
           <p class="result-note">You can access all five scenarios at any time from the navigation bar.</p>
           <button class="btn-primary" onclick="launchTool()" style="margin:0 auto">
             Open the tool <span aria-hidden="true">→</span>
@@ -1394,6 +1431,12 @@ body::before{display:none}
       <button class="tb-btn" onclick="printNotes()"
         aria-label="Print your highlights and notes">
         <span aria-hidden="true">⎙</span><span class="tb-label">Notes</span>
+      </button>
+      <div class="tb-divider" aria-hidden="true"></div>
+      <button class="tb-btn" id="ctr-toggle-btn" onclick="toggleClickToRead()"
+        aria-label="Tap to Read mode — tap any text to hear it read aloud"
+        aria-pressed="false" title="Tap any text to read it aloud">
+        <span aria-hidden="true">👆</span><span class="tb-label">Tap&nbsp;to&nbsp;Read</span>
       </button>
     </div>
   </header>
@@ -2110,7 +2153,7 @@ function renderScenarios() {
     el.innerHTML = buildScenario(s);
   });
   const rl = document.getElementById('refs-list');
-  rl.innerHTML = REFS.map(r => `<li class="ref-item">${r}</li>`).join('');
+  rl.innerHTML = REFS.map(r => `<li class="ref-item ctr-target">${r}</li>`).join('');
   renderGlossary('');
 }
 
@@ -2124,7 +2167,7 @@ function buildScenario(s) {
   html += `<div class="scenario-header">
     <div class="s-header-left" data-read-section="title">
       <div class="s-num" aria-label="Scenario ${s.id+1} ${t('scenarioOf')}">Scenario ${s.id+1} ${t('scenarioOf')}</div>
-      <h2 class="s-title">${s.title}</h2>
+      <h2 class="s-title ctr-target">${s.title}</h2>
     </div>
     <div class="s-header-actions">
       <button class="read-aloud-btn" id="read-btn-${s.id}"
@@ -2161,7 +2204,7 @@ function buildScenario(s) {
       <span class="card-type-icon" aria-hidden="true"></span>
       <span class="card-type-label">${t('cardSituation')}</span>
     </div>
-    <div class="card-body"><p role="text">${processText(s.scenario)}</p></div>
+    <div class="card-body ctr-target"><p role="text">${processText(s.scenario)}</p></div>
   </div>`;
 
   // Terms card
@@ -2196,7 +2239,7 @@ function buildScenario(s) {
         <span class="card-type-icon" aria-hidden="true"></span>
         <span class="card-type-label">${t('cardDefinition')}</span>
       </div>
-      <div class="card-body"><p role="text">${processText(s.definition)}</p></div>
+      <div class="card-body ctr-target"><p role="text">${processText(s.definition)}</p></div>
     </div>
   </div>`;
 
@@ -2208,7 +2251,7 @@ function buildScenario(s) {
         <span class="card-type-icon" aria-hidden="true"></span>
         <span class="card-type-label">${t('cardObligation')}</span>
       </div>
-      <div class="card-body"><p role="text">${processText(s.obligation)}</p></div>
+      <div class="card-body ctr-target"><p role="text">${processText(s.obligation)}</p></div>
     </div>
   </div>`;
 
@@ -2224,13 +2267,13 @@ function buildScenario(s) {
         <div class="steps-list" id="steps-${s.id}">`;
   const maxSteps = isQuick ? 2 : s.steps.length;
   s.steps.slice(0, maxSteps).forEach((step, i) => {
-    html += `<div class="step-item" data-delay="${i * 80}">
+    html += `<div class="step-item ctr-target" data-delay="${i * 80}">
       <span class="step-num" aria-hidden="true">${i+1}</span>
       <span class="step-text" role="text">${processText(step)}</span>
     </div>`;
   });
   if (isQuick && s.steps.length > 2) {
-    html += `<div class="step-item" style="opacity:.5">
+    html += `<div class="step-item ctr-target" style="opacity:.5">
       <span class="step-num" aria-hidden="true">…</span>
       <span class="step-text" style="font-style:italic;color:var(--muted)">
         ${s.steps.length - 2} ${t('moreSteps')}
@@ -2272,7 +2315,7 @@ function buildScenario(s) {
       <span class="sc-hint" aria-hidden="true"></span>
     </summary>
     <div class="self-check-body">
-      <div class="sc-prompt">${s.selfCheck}</div>
+      <div class="sc-prompt ctr-target">${s.selfCheck}</div>
       <textarea class="sc-textarea"
         placeholder="${t('selfCheckPlaceholder')}"
         aria-label="${t('selfCheckPlaceholder')}"></textarea>
@@ -2386,7 +2429,7 @@ function renderGlossary(query) {
             <span aria-hidden="true">▶</span>
           </button>
         </div>
-        <div class="ge-def">${g.def}</div>
+        <div class="ge-def ctr-target">${g.def}</div>
         ${g.cite ? `<div class="ge-cite">${g.cite}</div>` : ''}
       </div>`;
     });
@@ -2853,6 +2896,7 @@ function toggleRead(id) {
 }
 
 function startReading(id) {
+  stopCtrRead();
   if (!window.speechSynthesis) {
     announce('Text-to-speech is not available in this browser. Try Chrome, Edge, or Safari.');
     return;
@@ -3253,6 +3297,85 @@ function applyStaticTranslations() {
    INIT
 ══════════════════════════════════════════════════════════════ */
 /* ══════════════════════════════════════════════════════════════
+   CLICK-TO-READ MODE
+══════════════════════════════════════════════════════════════ */
+let ctrMode = false;
+let ctrActive = null; // currently-reading element
+
+function toggleClickToRead() {
+  ctrMode = !ctrMode;
+  const btn = document.getElementById('ctr-toggle-btn');
+  document.body.classList.toggle('ctr-mode', ctrMode);
+  if (btn) {
+    btn.classList.toggle('ctr-active', ctrMode);
+    btn.setAttribute('aria-pressed', ctrMode);
+    btn.querySelector('.tb-label').textContent = ctrMode ? 'Tap to Read ON' : 'Tap to Read';
+  }
+  if (!ctrMode) {
+    stopCtrRead();
+    announce('Tap to Read off.', 'polite');
+  } else {
+    announce('Tap to Read on. Tap any highlighted text to hear it read aloud.', 'polite');
+  }
+}
+
+function stopCtrRead() {
+  window.speechSynthesis?.cancel();
+  if (ctrActive) {
+    ctrActive.classList.remove('ctr-reading');
+    ctrActive = null;
+  }
+}
+
+function readElement(el) {
+  if (!ctrMode) return;
+  // Stop existing
+  stopCtrRead();
+
+  // Get clean text — strip child button text (speak buttons etc)
+  let text = '';
+  el.childNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // Skip buttons and icons
+      if (!node.matches('button,.ra-icon,.step-num,.card-type-label,.ge-speak-btn')) {
+        text += node.textContent;
+      }
+    }
+  });
+  text = text.replace(/\s+/g, ' ').trim();
+  if (!text) return;
+
+  if (!window.speechSynthesis) { announce('Text-to-speech not available.'); return; }
+
+  ctrActive = el;
+  el.classList.add('ctr-reading');
+
+  const u = new SpeechSynthesisUtterance(text);
+  applyVoice(u);
+  u.onend  = () => { el.classList.remove('ctr-reading'); if (ctrActive === el) ctrActive = null; };
+  u.onerror = e => { if (e.error !== 'interrupted') { el.classList.remove('ctr-reading'); if (ctrActive === el) ctrActive = null; }};
+  window.speechSynthesis.speak(u);
+}
+
+/* Delegate click handler — catches dynamically rendered targets */
+document.addEventListener('click', e => {
+  if (!ctrMode) return;
+  const target = e.target.closest('.ctr-target');
+  if (!target) return;
+  // Don't intercept button clicks inside targets
+  if (e.target.closest('button,a')) return;
+  e.stopPropagation();
+  // Toggle: if already reading this element, stop
+  if (ctrActive === target) {
+    stopCtrRead();
+    return;
+  }
+  readElement(target);
+}, true); // capture phase so it fires before other handlers
+
+/* ══════════════════════════════════════════════════════════════
    PER-ENTRY GLOSSARY SPEAK
 ══════════════════════════════════════════════════════════════ */
 let _activeGlossBtn = null;
@@ -3587,6 +3710,7 @@ function toggleIntakeRead() {
 }
 
 function startIntakeRead() {
+  stopCtrRead();
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   intakeSpeech = true;
