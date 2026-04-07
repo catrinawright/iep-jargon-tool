@@ -400,6 +400,7 @@ body::before{display:none}
   color:var(--faint);letter-spacing:.1em;
   border-left:1px solid var(--border);
   transition:color .2s;white-space:nowrap;
+  align-self:stretch;display:flex;align-items:center;
 }
 .nav-refs-btn:hover{color:var(--blue)}
 .nav-refs-btn.active{color:var(--blue);border-bottom:3px solid var(--blue);margin-bottom:-3px}
@@ -1486,9 +1487,9 @@ body::before{display:none}
           <span class="tab-num" aria-hidden="true">5</span>
           <span class="tab-label">LRE &amp; Placement</span>
         </button>
+        <button class="nav-refs-btn" id="refs-btn"
+          aria-expanded="false" onclick="showRefs()">REFS ↗</button>
       </div>
-      <button class="nav-refs-btn" id="refs-btn"
-        aria-expanded="false" onclick="showRefs()">REFS ↗</button>
     </div>
   </nav>
 
