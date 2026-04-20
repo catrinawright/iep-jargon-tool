@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The IEP Journey - Bilingual Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+      :root { --font-display:'Lora',serif; }
+      body { font-family:'Lexend',sans-serif; }
+      .dyslexic-mode, .dyslexic-mode * { font-family:'Lexend',sans-serif!important; letter-spacing:.07em; word-spacing:.18em; line-height:1.9; }
+      .skip-link { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+      .skip-link:focus { position:fixed; left:1rem; top:1rem; width:auto; height:auto; background:#0F2140; color:#fff; padding:.75rem 1.5rem; border-radius:2rem; font-weight:700; z-index:9999; }
+      .card-hover { transition:transform .18s ease,box-shadow .18s ease; }
+      .card-hover:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,.10); }
+      .fade-in { animation:fadeInUp .32s ease both; }
+      @keyframes fadeInUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+      .reading-active { background:rgba(253,224,71,.55)!important; border-radius:3px; transition:background .15s; }
+      @media print {
+        body{background:#fff!important}
+        .print-hidden{display:none!important}
+        .print-break{break-inside:avoid}
+      }
+    </style>
+</head>
+<body class="bg-[#FAF9F6]">
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useRef, useCallback, useEffect } = React;
+
+// ── TERMS (21) ─────────────────────────────────────────────────────────────
+const TERMS = [
+  { id:1,  type:'red',    icon:'fa-solid fa-file-pen',
+    name:{en:'PWN',es:'PWN'}, alt:{en:'Prior Written Notice',es:'Aviso Previo por Escrito'},
+    def:{en:'The school must provide written explanation of any proposed change, refusal, or action before it takes effect. This document must state what the school proposes or refuses to do, why, and what other options were considered (34 CFR § 300.503).',
+         es:'La escuela debe dar explicación escrita de cualquier cambio, negativa o acción propuesta antes de que surta efecto. Debe indicar qué propone o rechaza la escuela, por qué y qué otras opciones se consideraron (34 CFR § 300.503).'}},
+  { id:2,  type:'red',    icon:'fa-solid fa-shield-halved',
+    name:{en:'Stay Put',es:'Stay Put'}, alt:{en:'Maintenance of Placement',es:'Mantenimiento de Ubicación'},
+    def:{en:'While a due process complaint or legal dispute is pending, your child\'s current educational placement must remain unchanged — unless you and the school agree otherwise. This protection prevents schools from moving children during disputes (20 U.S.C. § 1415(j)).',
+         es:'Mientras una queja de debido proceso o disputa legal esté pendiente, la colocación educativa actual de su hijo no puede cambiar, a menos que usted y la escuela acuerden lo contrario. Esta protección impide que las escuelas muevan a los niños durante las disputas (20 U.S.C. § 1415(j)).'}},
+  { id:3,  type:'red',    icon:'fa-solid fa-gavel',
+    name:{en:'Due Process',es:'Debido Proceso'}, alt:{en:'Legal Hearing',es:'Audiencia Legal'},
+    def:{en:'A formal hearing conducted by an impartial hearing officer to resolve disputes between parents and the school district regarding identification, evaluation, placement, or the provision of FAPE. Either party may appeal the decision (34 CFR § 300.511).',
+         es:'Una audiencia formal dirigida por un funcionario imparcial para resolver disputas entre los padres y el distrito escolar sobre identificación, evaluación, colocación o la provisión de FAPE. Cualquiera de las partes puede apelar la decisión (34 CFR § 300.511).'}},
+  { id:4,  type:'red',    icon:'fa-regular fa-file-lines',
+    name:{en:'Procedural Safeguards',es:'Garantías Procesales'}, alt:{en:'Parental Rights Handbook',es:'Manual de Derechos'},
+    def:{en:'The official document the school must provide at least once a year explaining every legal protection you hold under IDEA — including your rights to consent, review records, request evaluations, file complaints, and dispute decisions (20 U.S.C. § 1415(d)).',
+         es:'El documento oficial que la escuela debe proporcionar al menos una vez al año explicando cada protección legal que tiene bajo IDEA, incluyendo sus derechos de consentimiento, revisión de registros, solicitar evaluaciones, presentar quejas e impugnar decisiones (20 U.S.C. § 1415(d)).'}},
+  { id:5,  type:'red',    icon:'fa-solid fa-shield-heart',
+    name:{en:'MDR',es:'MDR'}, alt:{en:'Manifestation Determination Review',es:'Revisión de Determinación de Manifestación'},
+    def:{en:'A mandatory meeting within 10 school days when a student with a disability faces a disciplinary removal of more than 10 days. The team must determine whether the behavior was caused by, or had a direct and substantial relationship to, the disability (34 CFR § 300.530(e)).',
+         es:'Una reunión obligatoria dentro de 10 días escolares cuando un estudiante con discapacidad enfrenta una remoción disciplinaria de más de 10 días. El equipo debe determinar si el comportamiento fue causado por la discapacidad o tuvo relación directa y sustancial con ella (34 CFR § 300.530(e)).'}},
+  { id:6,  type:'red',    icon:'fa-solid fa-magnifying-glass-chart',
+    name:{en:'IEE',es:'IEE'}, alt:{en:'Independent Educational Evaluation',es:'Evaluación Educativa Independiente'},
+    def:{en:'Your right to obtain an evaluation by a qualified evaluator outside the school district — at public expense — when you disagree with the school\'s evaluation. The school must consider the IEE results. Schools may only deny an IEE by requesting a due process hearing to defend their evaluation (34 CFR § 300.502).',
+         es:'Su derecho a obtener una evaluación por un evaluador calificado fuera del distrito escolar, a cargo del público, cuando no está de acuerdo con la evaluación de la escuela. La escuela debe considerar los resultados. Las escuelas solo pueden negar una IEE solicitando una audiencia de debido proceso (34 CFR § 300.502).'}},
+  { id:7,  type:'red',    icon:'fa-solid fa-handshake',
+    name:{en:'Mediation',es:'Mediación'}, alt:{en:'Voluntary Dispute Resolution',es:'Resolución Voluntaria de Disputas'},
+    def:{en:'A free, voluntary, confidential process in which a trained, impartial mediator helps parents and the school district reach a mutually agreeable resolution. Mediation does not delay or waive your right to a due process hearing. Any agreement reached is legally binding and enforceable in court (34 CFR § 300.506).',
+         es:'Un proceso gratuito, voluntario y confidencial en el que un mediador imparcial y capacitado ayuda a los padres y al distrito a alcanzar una resolución mutuamente aceptable. La mediación no retrasa ni renuncia a su derecho a una audiencia de debido proceso. Cualquier acuerdo alcanzado es legalmente vinculante (34 CFR § 300.506).'}},
+
+  { id:8,  type:'yellow', icon:'fa-solid fa-graduation-cap',
+    name:{en:'FAPE',es:'FAPE'}, alt:{en:'Free Appropriate Public Education',es:'Educación Pública Gratuita y Apropiada'},
+    def:{en:'The core guarantee of IDEA: every eligible child with a disability is entitled to special education and related services that are provided at no cost, meet the state educational standards, include preschool through secondary education, and are provided in conformity with the child\'s IEP (20 U.S.C. § 1401(9)).',
+         es:'La garantía central de IDEA: todo niño elegible con una discapacidad tiene derecho a recibir educación especial y servicios relacionados sin costo alguno, que cumplan con los estándares educativos estatales y se proporcionen de conformidad con el IEP del niño (20 U.S.C. § 1401(9)).'}},
+  { id:9,  type:'yellow', icon:'fa-solid fa-house',
+    name:{en:'LRE',es:'LRE'}, alt:{en:'Least Restrictive Environment',es:'Entorno Menos Restrictivo'},
+    def:{en:'IDEA requires that children with disabilities be educated with non-disabled children to the maximum extent appropriate. Removal from regular educational settings may only occur when the nature or severity of the disability is such that education with supplementary aids and services cannot be achieved satisfactorily (34 CFR § 300.114).',
+         es:'IDEA requiere que los niños con discapacidades sean educados con niños sin discapacidades en la mayor medida apropiada. La remoción de entornos educativos regulares solo puede ocurrir cuando la naturaleza de la discapacidad es tal que la educación con ayudas y servicios complementarios no puede lograrse satisfactoriamente (34 CFR § 300.114).'}},
+  { id:10, type:'yellow', icon:'fa-solid fa-chart-line',
+    name:{en:'PLAAFP',es:'PLAAFP'}, alt:{en:'Present Levels of Academic Achievement and Functional Performance',es:'Niveles Actuales de Desempeño'},
+    def:{en:'The foundation of the entire IEP — a data-driven description of your child\'s current functioning across academic and functional domains. Must include how the disability affects the child\'s involvement in the general curriculum and must be updated annually based on objective assessment data.',
+         es:'La base de todo el IEP: una descripción basada en datos del funcionamiento actual de su hijo en dominios académicos y funcionales. Debe incluir cómo la discapacidad afecta la participación del niño en el plan de estudios general y debe actualizarse anualmente.'}},
+  { id:11, type:'yellow', icon:'fa-solid fa-desktop',
+    name:{en:'Accommodations',es:'Acomodaciones'}, alt:{en:'How the Child Learns',es:'Cómo Aprende el Niño'},
+    def:{en:'Supports and services that change HOW a child accesses and demonstrates learning — such as extended time, preferential seating, oral testing, large print, or assistive technology — without changing the academic standards or content being taught.',
+         es:'Apoyos y servicios que cambian CÓMO un niño accede y demuestra el aprendizaje, como tiempo extendido, asientos preferenciales, exámenes orales o tecnología de asistencia, sin cambiar los estándares académicos ni el contenido que se enseña.'}},
+  { id:12, type:'yellow', icon:'fa-solid fa-book-open',
+    name:{en:'Modifications',es:'Modificaciones'}, alt:{en:'What the Child Learns',es:'Qué Aprende el Niño'},
+    def:{en:'Changes to WHAT a child is taught or expected to master — fundamentally altering the grade-level academic standard. Examples include reducing the number of assignments, simplifying reading materials, or changing the scope of assessment. Unlike accommodations, modifications change the learning expectation itself.',
+         es:'Cambios en QUÉ se enseña o se espera que domine un niño, alterando fundamentalmente el estándar académico de nivel de grado. Ejemplos: reducir el número de tareas, simplificar materiales de lectura o cambiar el alcance de la evaluación.'}},
+  { id:13, type:'yellow', icon:'fa-solid fa-bullseye',
+    name:{en:'Annual Goals',es:'Metas Anuales'}, alt:{en:'Measurable IEP Targets',es:'Objetivos Medibles del IEP'},
+    def:{en:'Written, measurable targets in the IEP describing what your child can reasonably be expected to accomplish in one year, given the right instruction and support. Goals must be directly based on the PLAAFP, address the child\'s unique needs, and be ambitious enough to reflect meaningful progress per the Endrew F. standard.',
+         es:'Objetivos escritos y medibles en el IEP que describen lo que se puede esperar razonablemente que su hijo logre en un año con la instrucción y el apoyo correctos. Las metas deben basarse directamente en el PLAAFP y ser lo suficientemente ambiciosas para reflejar un progreso significativo.'}},
+  { id:14, type:'yellow', icon:'fa-solid fa-calendar-plus',
+    name:{en:'ESY',es:'ESY'}, alt:{en:'Extended School Year',es:'Año Escolar Extendido'},
+    def:{en:'Special education and related services provided beyond the regular school calendar for a student whose IEP team determines they would otherwise experience significant skill regression during extended breaks. ESY cannot be denied solely to save money. Eligibility is individualized — not blanket-applied to disability category (34 CFR § 300.106).',
+         es:'Educación especial y servicios relacionados más allá del calendario escolar regular para un estudiante cuyo equipo del IEP determina que de lo contrario experimentaría una regresión significativa de habilidades durante los recesos. No se puede negar solo para ahorrar dinero (34 CFR § 300.106).'}},
+
+  { id:15, type:'green',  icon:'fa-solid fa-chalkboard-user',
+    name:{en:'SDI',es:'SDI'}, alt:{en:'Specially Designed Instruction',es:'Instrucción Especialmente Diseñada'},
+    def:{en:'Instruction that adapts — as appropriate — the content, methodology, or delivery of instruction to address the unique needs resulting from the child\'s disability and to ensure access to the general curriculum. SDI is the heart of special education and must be provided by a qualified special education teacher.',
+         es:'Instrucción que adapta, según sea apropiado, el contenido, la metodología o la entrega de la instrucción para abordar las necesidades únicas resultantes de la discapacidad del niño y garantizar el acceso al plan de estudios general. La SDI es el núcleo de la educación especial.'}},
+  { id:16, type:'green',  icon:'fa-solid fa-magnifying-glass',
+    name:{en:'FBA',es:'FBA'}, alt:{en:'Functional Behavior Assessment',es:'Evaluación Funcional del Comportamiento'},
+    def:{en:'A structured, data-based evaluation to identify the function — the WHY — behind a challenging behavior. Examines antecedents (triggers), the behavior itself, and consequences (what the child gains from it). Required when behavior impedes learning. The FBA\'s findings must directly inform the development of the BIP.',
+         es:'Una evaluación estructurada y basada en datos para identificar la función, el POR QUÉ, detrás de un comportamiento desafiante. Examina los antecedentes (desencadenantes), el comportamiento en sí y las consecuencias (qué gana el niño con ello). Obligatorio cuando el comportamiento impide el aprendizaje.'}},
+  { id:17, type:'green',  icon:'fa-solid fa-bolt',
+    name:{en:'BIP',es:'BIP'}, alt:{en:'Behavior Intervention Plan',es:'Plan de Intervención de Comportamiento'},
+    def:{en:'A proactive, positive behavior support plan built directly from FBA findings. Must identify the function of the behavior, environmental modifications, replacement behaviors to be taught, reinforcement strategies, and how all staff should respond consistently. A BIP is a legal document — schools cannot deviate from it without IEP team review.',
+         es:'Un plan de apoyo conductual positivo y proactivo construido directamente a partir de los hallazgos del FBA. Debe identificar la función del comportamiento, modificaciones ambientales, comportamientos de reemplazo a enseñar y estrategias de refuerzo. Un BIP es un documento legal.'}},
+  { id:18, type:'green',  icon:'fa-solid fa-users',
+    name:{en:'RBT',es:'RBT'}, alt:{en:'Registered Behavior Technician',es:'Técnico de Comportamiento Registrado'},
+    def:{en:'A paraprofessional who has completed the BACB\'s Registered Behavior Technician training and provides 1-on-1 implementation of behavior intervention plans under the direct supervision of a Board Certified Behavior Analyst (BCBA). If your child\'s BIP specifies RBT support, the school is legally required to provide it.',
+         es:'Un paraprofesional que ha completado la capacitación de Técnico de Comportamiento Registrado del BACB y proporciona implementación 1 a 1 de planes de intervención conductual bajo la supervisión directa de un analista certificado (BCBA).'}},
+  { id:19, type:'green',  icon:'fa-solid fa-scale-balanced',
+    name:{en:'Meaningful Progress',es:'Progreso Significativo'}, alt:{en:'Endrew F. Standard',es:'Estándar Endrew F.'},
+    def:{en:'The standard established by the Supreme Court in Endrew F. v. Douglas County (2017): every IEP must be "reasonably calculated to enable a child to make progress appropriate in light of the child\'s circumstances." The Court explicitly rejected "de minimis" or trivially advancing IEPs as insufficient under IDEA.',
+         es:'El estándar establecido por la Corte Suprema en Endrew F. v. Douglas County (2017): cada IEP debe estar "razonablemente calculado para permitir que un niño progrese apropiadamente a la luz de sus circunstancias". La Corte rechazó explícitamente los IEP de avance trivial.'}},
+  { id:20, type:'green',  icon:'fa-regular fa-message',
+    name:{en:'FCT',es:'FCT'}, alt:{en:'Functional Communication Training',es:'Entrenamiento en Comunicación Funcional'},
+    def:{en:'An evidence-based intervention that teaches a student to communicate needs, wants, or feelings through an appropriate, functionally equivalent replacement behavior — such as words, pictures, gestures, or an AAC device — instead of through a challenging behavior that serves the same communicative function.',
+         es:'Una intervención basada en evidencia que enseña a un estudiante a comunicar necesidades, deseos o sentimientos a través de un comportamiento de reemplazo apropiado y funcionalmente equivalente, como palabras, imágenes, gestos o un dispositivo AAC, en lugar de a través de un comportamiento desafiante.'}},
+  { id:21, type:'green',  icon:'fa-solid fa-chart-bar',
+    name:{en:'Progress Monitoring',es:'Monitoreo del Progreso'}, alt:{en:'Ongoing Data Collection',es:'Recopilación de Datos Continua'},
+    def:{en:'The regular, systematic measurement of your child\'s progress toward each IEP goal. The school is legally required to report progress to parents at least as often as it reports to parents of non-disabled students — typically quarterly. If data shows insufficient progress, the IEP team must reconvene and adjust.',
+         es:'La medición regular y sistemática del progreso de su hijo hacia cada meta del IEP. La escuela está legalmente obligada a reportar el progreso a los padres con la misma frecuencia con que lo hace para padres de estudiantes sin discapacidades. Si los datos muestran progreso insuficiente, el equipo del IEP debe reunirse para ajustar.'}},
+];
+
+// ── 12 ACTION SCRIPTS ────────────────────────────────────────────────────────
+const SCENARIOS = [
+  { id:101, cat:'progress',
+    iconCls:'fa-solid fa-scale-balanced text-3xl text-emerald-500',
+    feeling:{en:'"My child has had the exact same reading and math goals for three years."',es:'"Mi hijo ha tenido las mismas metas de lectura y matemáticas durante tres años."'},
+    connection:{en:'Identical goals year after year indicate "de minimis" progress — the standard explicitly rejected by the Supreme Court in Endrew F. v. Douglas County (2017). Goals must reflect current performance levels and be "appropriately ambitious."',es:'Las metas idénticas año tras año indican un progreso "de minimis", el estándar explícitamente rechazado por la Corte Suprema en Endrew F. (2017). Las metas deben reflejar los niveles de rendimiento actuales.'},
+    action:{en:'I am requesting an IEP revision meeting within 30 days to update my child\'s goals based on current PLAAFP data. Under Endrew F., I expect goals that are "appropriately ambitious" and calculated for real progress, not minimal advancement.',es:'Solicito una reunión de revisión del IEP dentro de 30 días para actualizar las metas de mi hijo basadas en datos actuales del PLAAFP. Bajo Endrew F., espero metas que sean "apropiadamente ambiciosas" y calculadas para un progreso real.'}},
+
+  { id:102, cat:'services',
+    iconCls:'fa-solid fa-triangle-exclamation text-3xl text-amber-500',
+    feeling:{en:'"The school told me they can\'t afford the service my child needs."',es:'"La escuela me dijo que no puede costear el servicio que mi hijo necesita."'},
+    connection:{en:'Cost is never a legal justification for denying a required service under IDEA. FAPE must be provided at no cost to the family regardless of the school\'s budget constraints. A service included in the IEP is a legal obligation (34 CFR § 300.323(c)).',es:'El costo nunca es justificación legal para negar un servicio requerido bajo IDEA. La FAPE debe proporcionarse sin costo para la familia independientemente de las restricciones presupuestarias de la escuela. Un servicio incluido en el IEP es una obligación legal (34 CFR § 300.323(c)).'},
+    action:{en:'I am formally notifying the district that financial limitations are not a legally permissible basis for denying FAPE. I am requesting written confirmation within 5 business days of when the required service will begin, or a Prior Written Notice explaining the refusal.',es:'Notifico formalmente al distrito que las limitaciones financieras no son una base legalmente permisible para negar la FAPE. Solicito confirmación escrita dentro de 5 días hábiles de cuándo comenzará el servicio requerido, o un Aviso Previo por Escrito explicando la negativa.'}},
+
+  { id:103, cat:'placement',
+    iconCls:'fa-solid fa-house text-3xl text-violet-500',
+    feeling:{en:'"The school wants to move my child to a more restrictive classroom setting."',es:'"La escuela quiere mover a mi hijo a un entorno de aula más restrictivo."'},
+    connection:{en:'Any placement change requires a Prior Written Notice explaining why, what was considered, and what data supports the decision. IDEA requires placement in the Least Restrictive Environment — the school must demonstrate that education in a less restrictive setting cannot be achieved satisfactorily (34 CFR § 300.114).',es:'Cualquier cambio de colocación requiere un Aviso Previo por Escrito. IDEA requiere colocación en el Entorno Menos Restrictivo: la escuela debe demostrar que la educación en un entorno menos restrictivo no puede lograrse satisfactoriamente (34 CFR § 300.114).'},
+    action:{en:'I do not consent to this placement change at this time. I am requesting a Prior Written Notice with the specific data, documentation, and supplementary aids and services that were considered and attempted before this recommendation. I am also requesting a copy of my child\'s most recent evaluation data.',es:'No doy mi consentimiento a este cambio de colocación en este momento. Solicito un Aviso Previo por Escrito con los datos específicos y las ayudas y servicios suplementarios que se consideraron y probaron antes de esta recomendación.'}},
+
+  { id:104, cat:'behavior',
+    iconCls:'fa-solid fa-shield-halved text-3xl text-red-500',
+    feeling:{en:'"The school keeps calling me to pick up my child early because of behavior."',es:'"La escuela me sigue llamando para recoger a mi hijo temprano debido a su comportamiento."'},
+    connection:{en:'Repeated early dismissals due to behavior constitute an informal or "de facto" suspension. Under IDEA, when behavior impedes a student\'s learning, the IEP team must consider positive behavioral interventions and supports — not exclusion. Informal removals can trigger disciplinary protections.',es:'Las salidas tempranas repetidas debido al comportamiento constituyen una suspensión informal o "de facto". Bajo IDEA, cuando el comportamiento impide el aprendizaje, el equipo del IEP debe considerar intervenciones conductuales positivas, no la exclusión.'},
+    action:{en:'I am requesting that the school immediately document the number and duration of all early dismissals. I am formally requesting an FBA to identify the function of this behavior and the development of a BIP. If these dismissals total more than 10 days, I am requesting a Manifestation Determination Review.',es:'Solicito que la escuela documente inmediatamente el número y la duración de todas las salidas tempranas. Solicito formalmente una FBA y el desarrollo de un BIP. Si estas salidas suman más de 10 días, solicito una Revisión de Determinación de Manifestación.'}},
+
+  { id:105, cat:'evaluation',
+    iconCls:'fa-solid fa-magnifying-glass-chart text-3xl text-sky-500',
+    feeling:{en:'"The school says my child doesn\'t need to be evaluated for special education."',es:'"La escuela dice que mi hijo no necesita ser evaluado para educación especial."'},
+    connection:{en:'Under IDEA\'s "Child Find" mandate, schools are required to identify, locate, and evaluate all children who may need special education services — regardless of whether the family requests it. If the school refuses to evaluate, they must provide written notice and you may disagree through due process (34 CFR § 300.111).',es:'Bajo el mandato de "Child Find" de IDEA, las escuelas están obligadas a identificar, localizar y evaluar a todos los niños que puedan necesitar servicios de educación especial. Si la escuela se niega a evaluar, debe proporcionar aviso escrito (34 CFR § 300.111).'},
+    action:{en:'I am making a formal written request for a full and individual evaluation of my child in all areas of suspected disability. I understand the school has 60 school days to complete the evaluation (in Illinois). If the school refuses, I am requesting a Prior Written Notice explaining the refusal and I will pursue my right to dispute this decision.',es:'Hago una solicitud formal por escrito para una evaluación completa e individual de mi hijo en todas las áreas de posible discapacidad. Entiendo que la escuela tiene 60 días para completar la evaluación. Si la escuela se niega, solicito un Aviso Previo por Escrito.'}},
+
+  { id:106, cat:'evaluation',
+    iconCls:'fa-solid fa-file-circle-question text-3xl text-indigo-500',
+    feeling:{en:'"I don\'t agree with the school\'s evaluation results."',es:'"No estoy de acuerdo con los resultados de evaluación de la escuela."'},
+    connection:{en:'When you disagree with the school\'s evaluation, you have the right to an Independent Educational Evaluation (IEE) at public expense. The school may either agree to fund the IEE or file for due process to defend their evaluation — they cannot simply deny your request without taking one of these steps (34 CFR § 300.502).',es:'Cuando no está de acuerdo con la evaluación de la escuela, tiene derecho a una Evaluación Educativa Independiente (IEE) a cargo del público. La escuela debe acordar financiar la IEE o solicitar debido proceso para defender su evaluación (34 CFR § 300.502).'},
+    action:{en:'I am formally requesting an Independent Educational Evaluation at public expense. I disagree with the school\'s evaluation because [reason]. I understand the school must either provide the IEE or initiate due process to prove their evaluation was appropriate. I am requesting a response in writing within 5 business days.',es:'Solicito formalmente una Evaluación Educativa Independiente a cargo del público. No estoy de acuerdo con la evaluación de la escuela porque [razón]. Entiendo que la escuela debe proporcionar la IEE o iniciar el debido proceso. Solicito respuesta por escrito dentro de 5 días hábiles.'}},
+
+  { id:107, cat:'discipline',
+    iconCls:'fa-solid fa-gavel text-3xl text-red-600',
+    feeling:{en:'"The school is threatening to suspend or expel my child because of their behavior."',es:'"La escuela amenaza con suspender o expulsar a mi hijo por su comportamiento."'},
+    connection:{en:'Students with disabilities have specific protections under IDEA before significant disciplinary action. For removals exceeding 10 school days or a change in placement, the school must conduct a Manifestation Determination Review. If the behavior is a manifestation of the disability, expulsion is generally prohibited (34 CFR § 300.530).',es:'Los estudiantes con discapacidades tienen protecciones específicas bajo IDEA antes de una acción disciplinaria significativa. Para remociones que excedan 10 días escolares, la escuela debe realizar una Revisión de Determinación de Manifestación (34 CFR § 300.530).'},
+    action:{en:'I am formally objecting to any disciplinary removal exceeding 10 school days without first convening a Manifestation Determination Review. I am requesting this review be scheduled within 10 school days. I am also requesting documentation of all previous behavioral supports and interventions that were provided under my child\'s IEP.',es:'Me opongo formalmente a cualquier remoción disciplinaria que exceda 10 días escolares sin primero convocar una Revisión de Determinación de Manifestación. Solicito que esta revisión se programe dentro de 10 días escolares.'}},
+
+  { id:108, cat:'participation',
+    iconCls:'fa-solid fa-users text-3xl text-teal-500',
+    feeling:{en:'"The school held an IEP meeting without me or made decisions before the meeting started."',es:'"La escuela celebró una reunión del IEP sin mí o tomó decisiones antes de que comenzara la reunión."'},
+    connection:{en:'Parent participation is a fundamental requirement of IDEA — not a courtesy. The school must take specific steps to ensure parents can attend and must document attempts to involve them. Predetermined IEP decisions made before the meeting constitute a procedural violation that can deny FAPE (34 CFR § 300.322).',es:'La participación de los padres es un requisito fundamental de IDEA, no una cortesía. La escuela debe tomar medidas específicas para garantizar la participación de los padres. Las decisiones predeterminadas del IEP constituyen una violación de procedimiento (34 CFR § 300.322).'},
+    action:{en:'I am filing a State complaint documenting that the school held an IEP meeting without securing my participation, which constitutes a procedural violation under IDEA. I am requesting that any IEP or decisions made at this meeting be invalidated and that a new meeting be scheduled with proper notice and my full participation.',es:'Presento una queja estatal documentando que la escuela celebró una reunión del IEP sin asegurar mi participación, lo que constituye una violación de procedimiento bajo IDEA. Solicito que el IEP o decisiones tomadas en esta reunión sean invalidadas y que se programe una nueva reunión.'}},
+
+  { id:109, cat:'language',
+    iconCls:'fa-solid fa-language text-3xl text-pink-500',
+    feeling:{en:'"The IEP documents are in English, and the meeting moves too fast for me to understand."',es:'"Los documentos del IEP están en inglés y la reunión avanza demasiado rápido para que yo entienda."'},
+    connection:{en:'Procedural Safeguards guarantee meaningful parent participation. IDEA requires the school to take steps to ensure that parents who speak a language other than English can fully participate in all IEP meetings. This includes providing translated documents and qualified interpreters — at no cost to the family.',es:'Las Garantías Procesales garantizan la participación significativa de los padres. IDEA requiere que la escuela tome medidas para garantizar que los padres que hablan un idioma distinto al inglés puedan participar plenamente en todas las reuniones del IEP.'},
+    action:{en:'I am formally requesting that all future IEP documents — evaluations, the IEP itself, and meeting summaries — be translated into my native language before any meeting takes place. I also require a qualified interpreter at all IEP-related meetings. I am documenting this request in writing today and expect written confirmation.',es:'Solicito formalmente que todos los documentos futuros del IEP, incluyendo evaluaciones y el IEP en sí, sean traducidos a mi idioma nativo antes de cualquier reunión. También requiero un intérprete calificado en todas las reuniones relacionadas con el IEP.'}},
+
+  { id:110, cat:'services',
+    iconCls:'fa-solid fa-calendar-xmark text-3xl text-orange-500',
+    feeling:{en:'"My child\'s IEP says they should get speech therapy, but they haven\'t been seen in weeks."',es:'"El IEP de mi hijo dice que debe recibir terapia del habla, pero no lo han atendido en semanas."'},
+    connection:{en:'Services written into an IEP are legally binding. When a school fails to provide mandated services, this constitutes a denial of FAPE and may require the school to provide compensatory education — additional services to make up for what was missed. Failure to implement an IEP is a violation regardless of the reason (34 CFR § 300.323).',es:'Los servicios escritos en un IEP son legalmente vinculantes. Cuando una escuela no proporciona servicios mandatados, esto constituye una negación de FAPE y puede requerir que la escuela proporcione educación compensatoria (34 CFR § 300.323).'},
+    action:{en:'I am formally documenting that the services specified in my child\'s IEP have not been delivered as required. I am requesting a written log of all service delivery dates for the current school year. I am also requesting that the school immediately develop a plan for compensatory services to address the missed instruction.',es:'Documento formalmente que los servicios especificados en el IEP de mi hijo no se han prestado según lo requerido. Solicito un registro escrito de todas las fechas de prestación de servicios del año escolar actual y un plan para servicios compensatorios.'}},
+
+  { id:111, cat:'progress',
+    iconCls:'fa-solid fa-arrow-trend-down text-3xl text-rose-500',
+    feeling:{en:'"My child is regressing. They knew this skill last year and can\'t do it now."',es:'"Mi hijo está retrocediendo. Sabía hacer esto el año pasado y ahora no puede."'},
+    connection:{en:'Significant skill regression during breaks may establish eligibility for Extended School Year (ESY) services. Regression during the school year, however, may indicate the IEP is not adequately supporting the child, goals need revision, or services are insufficient. Either situation requires immediate IEP team review.',es:'Una regresión significativa de habilidades durante los recesos puede establecer elegibilidad para servicios de ESY. La regresión durante el año escolar puede indicar que el IEP no apoya adecuadamente al niño y requiere revisión inmediata del equipo.'},
+    action:{en:'I am formally requesting an emergency IEP team meeting to review my child\'s current performance data and compare it to baseline levels from previous quarters. I am requesting an ESY eligibility determination and an immediate review of whether current services are sufficient to prevent continued regression.',es:'Solicito formalmente una reunión de emergencia del equipo del IEP para revisar los datos de rendimiento actuales de mi hijo. Solicito una determinación de elegibilidad para ESY y una revisión inmediata de si los servicios actuales son suficientes para prevenir la regresión continua.'}},
+
+  { id:112, cat:'transition',
+    iconCls:'fa-solid fa-road text-3xl text-slate-500',
+    feeling:{en:'"My child is turning 16 and no one has talked to us about life after school."',es:'"Mi hijo está por cumplir 16 años y nadie ha hablado con nosotros sobre la vida después de la escuela."'},
+    connection:{en:'IDEA requires that transition planning begin no later than the first IEP in effect when a student turns 16 (in Illinois, 14.5). This includes age-appropriate transition assessments, measurable postsecondary goals in education/training, employment, and independent living, and a coordinated set of transition services (34 CFR § 300.320(b)).',es:'IDEA requiere que la planificación de transición comience a más tardar en el primer IEP que esté vigente cuando el estudiante cumpla 16 años (en Illinois, 14.5). Esto incluye evaluaciones de transición, metas postsecundarias medibles y servicios de transición coordinados (34 CFR § 300.320(b)).'},
+    action:{en:'I am formally requesting that the next IEP meeting include a complete transition planning component, including age-appropriate transition assessments, measurable postsecondary goals, and a coordinated transition services plan addressing education, employment, and independent living. Per IDEA, transition planning should have begun already.',es:'Solicito formalmente que la próxima reunión del IEP incluya un componente completo de planificación de transición, incluyendo evaluaciones de transición apropiadas para la edad, metas postsecundarias medibles y un plan de servicios de transición coordinado.'}},
+];
+
+// ── STUDENT ACTION SCRIPTS (8) ───────────────────────────────────────────────
+const STUDENT_SCENARIOS = [
+  { id:201,
+    iconCls:'fa-solid fa-user-graduate text-3xl text-sky-500',
+    feeling:{en:'"I don\'t understand what half the words in my IEP mean."',
+             es:'"No entiendo la mitad de las palabras en mi IEP."'},
+    connection:{en:'Your IEP belongs to you. Under IDEA, you have the right to understand every goal, service, and decision in your plan. If no one has explained it to you in plain language, that is a gap the IEP team must fix.',
+                es:'Tu IEP te pertenece a ti. Bajo IDEA, tienes el derecho de entender cada meta, servicio y decisión en tu plan. Si nadie te lo ha explicado en lenguaje claro, eso es algo que el equipo del IEP debe corregir.'},
+    action:{en:'I would like someone to walk me through my IEP in plain language — what each goal means, what services I\'m getting, and why. I want to understand my own plan.',
+            es:'Me gustaría que alguien me explicara mi IEP en lenguaje sencillo: qué significa cada meta, qué servicios estoy recibiendo y por qué. Quiero entender mi propio plan.'}},
+
+  { id:202,
+    iconCls:'fa-solid fa-hand-raised text-3xl text-emerald-500',
+    feeling:{en:'"I want to speak at my IEP meeting, but I don\'t know if that\'s allowed."',
+             es:'"Quiero hablar en mi reunión del IEP, pero no sé si eso está permitido."'},
+    connection:{en:'You are not only allowed to participate in your IEP meeting — IDEA requires the team to invite you whenever transition planning is on the agenda. You have the right to share your goals, preferences, strengths, and concerns directly with the team.',
+                es:'No solo tienes permitido participar en tu reunión del IEP: IDEA requiere que el equipo te invite siempre que la planificación de transición esté en la agenda. Tienes el derecho de compartir tus metas, preferencias, fortalezas y preocupaciones directamente con el equipo.'},
+    action:{en:'I want to attend and speak at my own IEP meeting. I have things I want the team to know about my goals, what helps me learn, and what I want for my future. Please include me.',
+            es:'Quiero asistir y hablar en mi propia reunión del IEP. Tengo cosas que quiero que el equipo sepa sobre mis metas, lo que me ayuda a aprender y lo que quiero para mi futuro. Por favor inclúyanme.'}},
+
+  { id:203,
+    iconCls:'fa-solid fa-scale-balanced text-3xl text-violet-500',
+    feeling:{en:'"I feel like my goals are too easy — I\'ve already mastered them."',
+             es:'"Siento que mis metas son demasiado fáciles — ya las domino."'},
+    connection:{en:'Under the Supreme Court\'s Endrew F. ruling (2017), your IEP goals must be "appropriately ambitious" — not just minimal or easy. If you\'ve already mastered a goal, the IEP team is required to update it to reflect your current level and push you forward.',
+                es:'Bajo el fallo Endrew F. de la Corte Suprema (2017), tus metas del IEP deben ser "apropiadamente ambiciosas", no solo mínimas o fáciles. Si ya dominas una meta, el equipo del IEP debe actualizarla para reflejar tu nivel actual y impulsarte hacia adelante.'},
+    action:{en:'I\'ve already mastered some of my current goals and I don\'t feel challenged. I\'d like the team to review my progress data and update my goals to reflect where I actually am and what I can achieve next.',
+            es:'Ya domino algunas de mis metas actuales y no me siento desafiado/a. Me gustaría que el equipo revisara mis datos de progreso y actualizara mis metas para reflejar dónde estoy realmente y qué puedo lograr a continuación.'}},
+
+  { id:204,
+    iconCls:'fa-solid fa-road text-3xl text-amber-500',
+    feeling:{en:'"Nobody has asked me what I want to do after school."',
+             es:'"Nadie me ha preguntado qué quiero hacer después de la escuela."'},
+    connection:{en:'Transition planning is legally required to include YOUR goals — not just what adults decide for you. IDEA requires age-appropriate transition assessments based on your interests, preferences, and strengths. Your voice must be at the center of transition planning.',
+                es:'La planificación de transición debe incluir TUS metas, no solo lo que los adultos deciden por ti. IDEA requiere evaluaciones de transición basadas en tus intereses, preferencias y fortalezas. Tu voz debe estar en el centro de la planificación de transición.'},
+    action:{en:'I want to be part of my transition planning. I have ideas about what I want to do after school — including work, school, and living on my own. I\'d like the team to ask me about my goals and build my transition plan around them.',
+            es:'Quiero ser parte de mi planificación de transición. Tengo ideas sobre lo que quiero hacer después de la escuela, incluyendo trabajo, estudios y vivir de forma independiente. Me gustaría que el equipo me preguntara sobre mis metas y construyera mi plan de transición en torno a ellas.'}},
+
+  { id:205,
+    iconCls:'fa-solid fa-key text-3xl text-gold-500',
+    feeling:{en:'"I\'m turning 18. What changes about my IEP rights?"',
+             es:'"Estoy cumpliendo 18 años. ¿Qué cambia sobre mis derechos del IEP?"'},
+    connection:{en:'At age 18, IDEA rights transfer from your parents to you. You become the decision-maker for your own IEP — including consent for evaluations, changes to services, and placement. The school must notify you of this transfer and provide you with all Procedural Safeguards directly. This is called the Transfer of Rights (34 CFR § 300.520).',
+                es:'A los 18 años, los derechos de IDEA se transfieren de tus padres a ti. Tú te conviertes en quien toma las decisiones sobre tu propio IEP, incluyendo el consentimiento para evaluaciones, cambios en los servicios y colocación. Esto se llama Transferencia de Derechos (34 CFR § 300.520).'},
+    action:{en:'I understand that when I turn 18, the rights under IDEA transfer to me. I would like the school to explain exactly what changes, what I will now be responsible for, and how I can make sure my parents are still involved if I want them to be.',
+            es:'Entiendo que cuando cumpla 18 años, los derechos bajo IDEA se transfieren a mí. Me gustaría que la escuela explique exactamente qué cambia, de qué seré responsable y cómo puedo asegurarme de que mis padres todavía participen si así lo deseo.'}},
+
+  { id:206,
+    iconCls:'fa-solid fa-person-circle-question text-3xl text-rose-500',
+    feeling:{en:'"I don\'t feel like my disability is being taken seriously in class."',
+             es:'"Siento que mi discapacidad no se toma en serio en clase."'},
+    connection:{en:'Your accommodations and modifications are legally required supports — not optional extras. If teachers are not implementing what is written in your IEP, the school is violating a legal obligation. Every service and support in your IEP must be delivered consistently by every adult responsible for your instruction.',
+                es:'Tus acomodaciones y modificaciones son apoyos legalmente requeridos, no extras opcionales. Si los maestros no están implementando lo que está escrito en tu IEP, la escuela está violando una obligación legal. Cada servicio y apoyo en tu IEP debe ser entregado consistentemente.'},
+    action:{en:'I don\'t think my IEP accommodations are being followed in all my classes. I\'d like to review my IEP with my case manager and make sure every teacher knows what supports I\'m supposed to receive. I want what the IEP says to actually happen.',
+            es:'No creo que mis acomodaciones del IEP se estén siguiendo en todas mis clases. Me gustaría revisar mi IEP con mi coordinador de caso y asegurarme de que cada maestro sepa qué apoyos debo recibir. Quiero que lo que dice el IEP realmente ocurra.'}},
+
+  { id:207,
+    iconCls:'fa-solid fa-comment-dots text-3xl text-teal-500',
+    feeling:{en:'"I have communication needs and I\'m not sure the team understands how I communicate best."',
+             es:'"Tengo necesidades de comunicación y no estoy seguro/a de que el equipo entienda cómo me comunico mejor."'},
+    connection:{en:'Your communication needs are central to your IEP. If you use AAC, picture systems, or other alternative communication, the IEP must document this and ensure every setting supports it. Under IDEA, communication needs must be considered for every student with a disability.',
+                es:'Tus necesidades de comunicación son centrales en tu IEP. Si usas CAA, sistemas de imágenes u otras comunicaciones alternativas, el IEP debe documentarlo y asegurarse de que cada entorno lo apoye. Bajo IDEA, las necesidades de comunicación deben considerarse para cada estudiante con discapacidad.'},
+    action:{en:'I want my IEP to accurately reflect how I communicate and what supports I need to communicate in every setting — class, lunch, community, and meetings. Please make sure every adult working with me understands how I communicate best.',
+            es:'Quiero que mi IEP refleje con precisión cómo me comunico y qué apoyos necesito para comunicarme en cada entorno: clase, almuerzo, comunidad y reuniones. Por favor asegúrense de que cada adulto que trabaje conmigo entienda cómo me comunico mejor.'}},
+
+  { id:208,
+    iconCls:'fa-solid fa-shield-halved text-3xl text-red-500',
+    feeling:{en:'"I was disciplined at school and I think my disability played a role."',
+             es:'"Fui disciplinado/a en la escuela y creo que mi discapacidad tuvo un papel."'},
+    connection:{en:'If you face a suspension of more than 10 school days, IDEA requires a Manifestation Determination Review. The team must determine whether your behavior was caused by your disability or by the school\'s failure to implement your IEP. If it was, the school cannot expel you and must provide behavioral supports instead.',
+                es:'Si enfrentas una suspensión de más de 10 días escolares, IDEA requiere una Revisión de Determinación de Manifestación. El equipo debe determinar si tu comportamiento fue causado por tu discapacidad. Si fue así, la escuela no puede expulsarte y debe proporcionar apoyos conductuales en su lugar.'},
+    action:{en:'I believe my behavior may be connected to my disability. I am requesting a Manifestation Determination Review and asking that my IEP team review whether my BIP and behavioral supports are being consistently implemented before any disciplinary decision is made.',
+            es:'Creo que mi comportamiento puede estar relacionado con mi discapacidad. Solicito una Revisión de Determinación de Manifestación y pido que mi equipo del IEP revise si mi BIP y apoyos conductuales se están implementando consistentemente antes de tomar cualquier decisión disciplinaria.'}},
+];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getMailtoLink(text) {
+  const subj = encodeURIComponent('IEP Formal Request — Documentation');
+  const body = encodeURIComponent(text + '\n\n[Student Name]\n[Date]\n[School Name]\n[Parent/Guardian Name & Signature]');
+  return `mailto:?subject=${subj}&body=${body}`;
+}
+
+const BORDER  = { red:'border-red-500', yellow:'border-amber-400', green:'border-emerald-500' };
+const ICON_BG = { red:'bg-red-50 text-red-600', yellow:'bg-amber-50 text-amber-600', green:'bg-emerald-50 text-emerald-600' };
+const BADGE   = { red:'bg-red-50 text-red-700 border-red-200', yellow:'bg-amber-50 text-amber-700 border-amber-200', green:'bg-emerald-50 text-emerald-700 border-emerald-200' };
+const TYPE_LABEL = { red:{en:'Legal Rights',es:'Derechos Legales'}, yellow:{en:'IEP Structure',es:'Estructura IEP'}, green:{en:'Behavior & Progress',es:'Conducta y Progreso'} };
+const CAT_LABEL  = {
+  progress:{en:'Progress',es:'Progreso'}, services:{en:'Services',es:'Servicios'},
+  placement:{en:'Placement',es:'Colocación'}, behavior:{en:'Behavior',es:'Conducta'},
+  evaluation:{en:'Evaluation',es:'Evaluación'}, discipline:{en:'Discipline',es:'Disciplina'},
+  participation:{en:'Participation',es:'Participación'}, language:{en:'Language',es:'Idioma'},
+  transition:{en:'Transition',es:'Transición'},
+};
+
+// ── READ ALOUD ENGINE ─────────────────────────────────────────────────────────
+function useReadAloud(lang) {
+  const [speaking, setSpeaking]   = useState(false);
+  const [activeId, setActiveId]   = useState(null);
+
+  const speak = useCallback((text, id) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang === 'en' ? 'en-US' : 'es-419';
+    u.rate = 0.92;
+    u.onstart = () => { setSpeaking(true); setActiveId(id); };
+    u.onend   = () => { setSpeaking(false); setActiveId(null); };
+    u.onerror = () => { setSpeaking(false); setActiveId(null); };
+    window.speechSynthesis.speak(u);
+  }, [lang]);
+
+  const stop = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setSpeaking(false); setActiveId(null);
+  }, []);
+
+  return { speak, stop, speaking, activeId };
+}
+
+// ── READ ALOUD BUTTON ─────────────────────────────────────────────────────────
+function ReadBtn({ text, id, ra, label }) {
+  const isActive = ra.activeId === id && ra.speaking;
+  return (
+    <button
+      onClick={() => isActive ? ra.stop() : ra.speak(text, id)}
+      aria-label={isActive ? `Stop reading ${label}` : `Read aloud: ${label}`}
+      aria-pressed={isActive}
+      className={`p-2 rounded-full transition-colors ${isActive ? 'text-sky-600 bg-sky-100' : 'text-slate-400 hover:text-sky-500 hover:bg-sky-50'}`}>
+      <i className={`fa-solid ${isActive ? 'fa-stop' : 'fa-volume-high'}`} aria-hidden="true"></i>
+    </button>
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [role, setRole]         = useState(null);   // null = intake, 'parent' | 'student'
+  const [view, setView]         = useState('home');
+  const [search, setSearch]     = useState('');
+  const [filter, setFilter]     = useState('all');
+  const [catFilter, setCat]     = useState('all');
+  const [isDyslexic, setDys]    = useState(false);
+  const [language, setLang]     = useState('en');
+  const [savedTerms, setSavedT] = useState([]);
+  const [savedScen, setSavedS]  = useState([]);
+  const [toast, setToast]       = useState('');
+
+  // When role changes, reset view to home
+  const chooseRole = r => { setRole(r); setView('home'); };
+
+  const t = (en, es) => language === 'en' ? en : es;
+  const ra = useReadAloud(language);
+
+  const showToast = msg => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+
+  const copyText = text => {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast(t('Copied!', '¡Copiado!')))
+      .catch(() => {
+        const el = document.createElement('textarea');
+        el.value = text; document.body.appendChild(el); el.select();
+        try { document.execCommand('copy'); showToast(t('Copied!', '¡Copiado!')); } catch {}
+        document.body.removeChild(el);
+      });
+  };
+
+  const filteredTerms = useMemo(() => TERMS.filter(term => {
+    const q = search.toLowerCase();
+    const hit = [term.name[language], term.alt[language], term.def[language]].join(' ').toLowerCase().includes(q);
+    return hit && (filter === 'all' || term.type === filter);
+  }), [search, filter, language]);
+
+  const filteredScen = useMemo(() => SCENARIOS.filter(s =>
+    catFilter === 'all' || s.cat === catFilter
+  ), [catFilter]);
+
+  const toggleT = id => setSavedT(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const toggleS = id => setSavedS(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const total = savedTerms.length + savedScen.length;
+
+  // ── NAV ───────────────────────────────────────────────────────────────────
+  const Nav = () => (
+    <nav role="navigation" aria-label="Tool controls" className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm print-hidden">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+        <button onClick={() => setLang(language==='en'?'es':'en')}
+          aria-label={language==='en'?'Switch to Spanish':'Cambiar a inglés'}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-full text-sm font-bold text-slate-700 transition-colors">
+          <i className="fa-solid fa-language" aria-hidden="true"></i>
+          {language==='en'?'Español':'English'}
+        </button>
+        <button onClick={() => setDys(!isDyslexic)} aria-pressed={isDyslexic}
+          aria-label={isDyslexic?t('Disable dyslexia font','Desactivar fuente dislexia'):t('Enable dyslexia font','Activar fuente dislexia')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${isDyslexic?'bg-indigo-100 text-indigo-700 border border-indigo-300':'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+          <i className="fa-solid fa-font" aria-hidden="true"></i>
+          {t('Dyslexia Font','Fuente Dislexia')}
+        </button>
+        {/* Role switcher */}
+        {role && (
+          <button onClick={() => { setRole(null); setView('home'); }}
+            aria-label={t('Switch role','Cambiar rol')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors border ${role==='student'?'bg-violet-100 text-violet-700 border-violet-300':'bg-sky-100 text-sky-700 border-sky-300'}`}>
+            <i className={`fa-solid ${role==='student'?'fa-user-graduate':'fa-people-roof'}`} aria-hidden="true"></i>
+            {role==='student' ? t('Student','Estudiante') : t('Parent','Padre/Tutor')}
+          </button>
+        )}
+        <div className="ml-auto flex items-center gap-2 flex-wrap">
+          {role && view !== 'home' && (
+            <button onClick={() => setView('home')} aria-label={t('Back to home','Volver al inicio')}
+              className="flex items-center gap-2 px-4 py-2 bg-white rounded-full font-bold text-slate-600 hover:text-sky-600 border border-slate-200 shadow-sm transition-all">
+              <i className="fa-solid fa-arrow-left" aria-hidden="true"></i>{t('Back','Volver')}
+            </button>
+          )}
+          {role && (
+            <button onClick={() => setView('prep')}
+              aria-label={t(`My Prep Sheet, ${total} saved`,`Mi Hoja, ${total} guardados`)}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full font-bold shadow-sm border transition-all ${total>0?'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200':'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'}`}>
+              <i className={`fa-bookmark ${total>0?'fa-solid text-amber-500':'fa-regular'}`} aria-hidden="true"></i>
+              {t('My Prep Sheet','Mi Hoja')}
+              {total>0 && <span aria-hidden="true" className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full">{total}</span>}
+            </button>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+
+  // ── HOME ─────────────────────────────────────────────────────────────────
+  const HomeView = () => (
+    <div className="max-w-5xl mx-auto px-4 py-10 fade-in">
+      <div className="text-center mb-12">
+        <i className="fa-regular fa-compass text-7xl text-sky-500 mb-5 block" aria-hidden="true"></i>
+        <h1 className="text-5xl md:text-6xl font-extrabold text-slate-800 mb-5 tracking-tight" style={{fontFamily:'var(--font-display)'}}>
+          {t('The IEP Journey','El Viaje del IEP')}
+        </h1>
+        <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+          {t('An interactive, bilingual parent resource grounded in IDEA and the Endrew F. Supreme Court standard. Know your rights. Use your voice. Navigate the path to an appropriately ambitious IEP.',
+             'Un recurso interactivo y bilingüe para padres fundamentado en IDEA y el estándar Endrew F. Conozca sus derechos. Use su voz. Navegue el camino hacia un IEP apropiadamente ambicioso.')}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+        {[
+          { view:'idea',     bg:'bg-sky-500',    icon:'fa-solid fa-book-open',        num:'1',
+            title:{en:'IDEA Basics',es:'Fundamentos IDEA'},
+            sub:{en:'FAPE · LRE · Consent · Your rights as a parent',es:'FAPE · LRE · Consentimiento · Sus derechos'}},
+          { view:'endrew',   bg:'bg-emerald-600',icon:'fa-solid fa-scale-balanced',   num:'2',
+            title:{en:'Endrew F. Decision',es:'Decisión Endrew F.'},
+            sub:{en:'The Supreme Court case every parent must know',es:'El caso de la Corte Suprema que todo padre debe conocer'}},
+          { view:'sel',      bg:'bg-rose-500',   icon:'fa-solid fa-brain',            num:'3',
+            title:{en:'SEL & Behavior',es:'SEL y Conducta'},
+            sub:{en:'FBA · BIP · RBT · Positive behavioral supports',es:'FBA · BIP · RBT · Apoyos conductuales positivos'}},
+          { view:'terms',    bg:'bg-amber-500',  icon:'fa-solid fa-table-cells-large',num:'4',
+            title:{en:'Glossary',es:'Glosario'},
+            sub:{en:'21 bilingual terms — searchable, with read aloud',es:'21 términos bilingües — buscables, con lectura en voz alta'}},
+          { view:'advocacy', bg:'bg-slate-700',  icon:'fa-regular fa-message',        num:'5',
+            title:{en:'Action Scripts',es:'Guiones de Acción'},
+            sub:{en:'12 ready-to-use scripts for the most common IEP issues',es:'12 guiones listos para los problemas del IEP más comunes'}},
+          { view:'prep',     bg:'bg-amber-600',  icon:'fa-solid fa-bookmark',         num:'6',
+            title:{en:'My Prep Sheet',es:'Mi Hoja'},
+            sub:{en:'Save terms and scripts to print before your meeting',es:'Guarde términos y guiones para imprimir antes de su reunión'}},
+        ].map(card => (
+          <button key={card.view} onClick={() => setView(card.view)}
+            className={`${card.bg} p-6 rounded-3xl text-white shadow-md card-hover flex flex-col items-center text-center border-4 border-white focus:outline-none focus:ring-4 focus:ring-white/50`}
+            aria-label={`${card.num}. ${card.title[language]}: ${card.sub[language]}`}>
+            <div className="mb-3 bg-white/20 p-4 rounded-2xl">
+              <i className={`${card.icon} text-2xl`} aria-hidden="true"></i>
+            </div>
+            <h2 className="font-bold text-lg mb-1">{card.num}. {card.title[language]}</h2>
+            <p className="text-white/80 text-xs leading-snug">{card.sub[language]}</p>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-10 max-w-5xl mx-auto grid grid-cols-3 gap-4">
+        {[{num:'21',label:{en:'Bilingual Terms',es:'Términos Bilingües'},c:'text-amber-600'},
+          {num:'12',label:{en:'Action Scripts',es:'Guiones de Acción'},c:'text-sky-600'},
+          {num:'2', label:{en:'Languages',es:'Idiomas'},c:'text-emerald-600'}].map(s => (
+          <div key={s.num} className="bg-white rounded-2xl p-5 text-center shadow-sm border border-slate-100">
+            <div className={`text-3xl font-extrabold mb-1 ${s.c}`}>{s.num}</div>
+            <div className="text-xs text-slate-500 font-medium">{s.label[language]}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── IDEA ─────────────────────────────────────────────────────────────────
+  const IdeaView = () => {
+    const sections = [
+      { id:'idea-law', title:{en:'The Law of Opportunity',es:'La Ley de Oportunidad'},
+        body:{en:'The Individuals with Disabilities Education Act (IDEA) guarantees that every eligible child with a disability receives an education designed to prepare them for "further education, employment, and independent living" — at no cost to the family. IDEA is both a civil rights law and a funding statute, and it applies from birth through age 21 (20 U.S.C. § 1400(d)).',
+              es:'La Ley de Educación para Individuos con Discapacidades (IDEA) garantiza que cada niño elegible con una discapacidad reciba una educación diseñada para prepararlo para "educación superior, empleo y vida independiente" sin costo para la familia. IDEA es tanto una ley de derechos civiles como un estatuto de financiamiento (20 U.S.C. § 1400(d)).'}},
+      { id:'idea-fape', title:{en:'FAPE: The Core Guarantee',es:'FAPE: La Garantía Central'},
+        body:{en:'Free Appropriate Public Education means: Free — no cost to the family for special education or related services. Appropriate — meeting the child\'s unique needs based on their IEP, not a generic program. Public — provided by the school district. Education — specially designed instruction and all required related services. Without FAPE, every other protection in IDEA is meaningless.',
+              es:'Educación Pública Gratuita y Apropiada significa: Gratuita — sin costo para la familia. Apropiada — que satisface las necesidades únicas del niño según su IEP. Pública — proporcionada por el distrito escolar. Educación — instrucción especialmente diseñada y todos los servicios relacionados requeridos. Sin la FAPE, cada otra protección en IDEA no tiene sentido.'}},
+      { id:'idea-lre', title:{en:'LRE: The Inclusion Mandate',es:'LRE: El Mandato de Inclusión'},
+        body:{en:'IDEA requires that children with disabilities be educated with non-disabled peers to the maximum extent appropriate. This is not optional — it is a legal mandate. The school cannot place a child in a more restrictive setting simply because it is more convenient. The school must demonstrate that education in the regular classroom with supplementary aids and services cannot be achieved satisfactorily before removing a child (34 CFR § 300.114).',
+              es:'IDEA requiere que los niños con discapacidades sean educados con sus compañeros sin discapacidades en la mayor medida apropiada. Esto no es opcional, es un mandato legal. La escuela no puede colocar a un niño en un entorno más restrictivo simplemente porque sea más conveniente (34 CFR § 300.114).'}},
+      { id:'idea-consent', title:{en:'Consent: Your Authority',es:'Consentimiento: Su Autoridad'},
+        body:{en:'The school must obtain your informed written consent before conducting any initial evaluation, before placing your child in special education for the first time, and before making significant changes to services. You can revoke consent at any time in writing. Without your consent, the school cannot evaluate your child or place them in special education — and consent to one action does not imply consent to another.',
+              es:'La escuela debe obtener su consentimiento informado por escrito antes de cualquier evaluación inicial, antes de colocar a su hijo en educación especial por primera vez y antes de cambios significativos en los servicios. Puede revocar el consentimiento en cualquier momento por escrito. Sin su consentimiento, la escuela no puede evaluar ni colocar a su hijo en educación especial.'}},
+      { id:'idea-team', title:{en:'Your Role on the IEP Team',es:'Su Rol en el Equipo del IEP'},
+        body:{en:'Parents are equal members of the IEP team — not guests, not observers. You have the right to participate in every decision, review all evaluations, bring a support person or advocate, request meetings at any time, and disagree with any proposed action. Under IDEA, an IEP developed without meaningful parent participation may be legally invalid.',
+              es:'Los padres son miembros iguales del equipo del IEP, no invitados ni observadores. Tiene el derecho de participar en cada decisión, revisar todas las evaluaciones, traer una persona de apoyo o defensor, solicitar reuniones en cualquier momento y estar en desacuerdo con cualquier acción propuesta. Un IEP desarrollado sin participación significativa de los padres puede ser legalmente inválido.'}},
+    ];
+    return (
+      <section id="main-content" className="max-w-4xl mx-auto p-4 mt-4 fade-in" aria-labelledby="idea-h">
+        <h2 id="idea-h" className="text-4xl font-bold text-sky-500 mb-8 border-l-8 border-sky-500 pl-6 py-2" style={{fontFamily:'var(--font-display)'}}>
+          1. {t('IDEA Foundations','Fundamentos de IDEA')}
+        </h2>
+        <div className="space-y-5">
+          {sections.map(sec => (
+            <div key={sec.id} className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h3 className="text-xl font-bold text-slate-800">{sec.title[language]}</h3>
+                <ReadBtn text={`${sec.title[language]}. ${sec.body[language]}`} id={sec.id} ra={ra} label={sec.title[language]} />
+              </div>
+              <p className="text-slate-600 leading-relaxed">{sec.body[language]}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // ── ENDREW F. DEDICATED PAGE ──────────────────────────────────────────────
+  const EndrewView = () => {
+    const sections = [
+      { id:'end-case', title:{en:'The Case: Endrew F. v. Douglas County School District',es:'El Caso: Endrew F. v. Distrito Escolar del Condado de Douglas'},
+        body:{en:'In 2017, the United States Supreme Court unanimously decided Endrew F. v. Douglas County School District, 580 U.S. 386 (2017). The case was brought by the parents of Endrew F., a child with autism, who argued that the IEPs provided by the Douglas County School District in Colorado offered only "de minimis" (minimal) progress and did not constitute FAPE. The parents withdrew Endrew from public school, enrolled him in a private school where he made significant progress, and sought reimbursement from the district.',
+              es:'En 2017, la Corte Suprema de los Estados Unidos decidió por unanimidad Endrew F. v. Distrito Escolar del Condado de Douglas, 580 U.S. 386 (2017). El caso fue presentado por los padres de Endrew F., un niño con autismo, quien argumentó que los IEP proporcionados no constituían FAPE. Los padres lo retiraron de la escuela pública, lo inscribieron en una escuela privada donde progresó significativamente, y buscaron reembolso del distrito.'}},
+      { id:'end-question', title:{en:'The Legal Question Before the Court',es:'La Pregunta Legal Ante la Corte'},
+        body:{en:'The central question was: What is the standard of educational benefit that a school district must provide to meet its FAPE obligation under IDEA? The lower courts had applied a standard that required only "some" educational benefit — or "merely more than de minimis" progress — to satisfy IDEA. The Supreme Court granted certiorari to resolve the disagreement among circuit courts about the appropriate standard.',
+              es:'La pregunta central era: ¿Cuál es el estándar de beneficio educativo que un distrito escolar debe proporcionar para cumplir con su obligación de FAPE bajo IDEA? Los tribunales inferiores habían aplicado un estándar que solo requería "algún" beneficio educativo o progreso "meramente más que mínimo". La Corte Suprema aceptó el caso para resolver el desacuerdo entre los tribunales de apelaciones.'}},
+      { id:'end-ruling', title:{en:'The Supreme Court\'s Unanimous Ruling',es:'El Fallo Unánime de la Corte Suprema'},
+        body:{en:'Chief Justice John Roberts, writing for a unanimous Court, held that the "de minimis" standard was insufficient. The Court ruled: "A school must offer an IEP reasonably calculated to enable a child to make progress appropriate in light of the child\'s circumstances." The Court explicitly rejected any reading of IDEA that would allow schools to satisfy their obligations by offering only trivially advancing IEPs.',
+              es:'El Presidente del Tribunal Supremo John Roberts, escribiendo por una Corte unánime, sostuvo que el estándar "de minimis" era insuficiente. La Corte dictaminó: "Una escuela debe ofrecer un IEP razonablemente calculado para permitir que un niño progrese apropiadamente a la luz de las circunstancias del niño." La Corte rechazó explícitamente cualquier interpretación de IDEA que permitiera a las escuelas satisfacer sus obligaciones ofreciendo solo IEP de avance trivial.'}},
+      { id:'end-standard', title:{en:'The "Appropriately Ambitious" Standard',es:'El Estándar "Apropiadamente Ambicioso"'},
+        body:{en:'The Court established that goals must be "appropriately ambitious" and that instruction must be "reasonably calculated to enable a child to make progress." The Court clarified that this standard is calibrated to the individual child: "For a child fully integrated in the regular classroom, an IEP typically should, as the statute prescribes, be reasonably calculated to enable the child to achieve passing marks and advance from grade to grade. For a child in a special classroom, advancing from grade to grade will not always be a reasonable expectation. But this should not be confused with permitting a school to offer a trivially advancing IEP." Progress must reflect the child\'s actual potential — not a convenient baseline.',
+              es:'La Corte estableció que las metas deben ser "apropiadamente ambiciosas" y que la instrucción debe estar "razonablemente calculada para permitir que un niño progrese." La Corte aclaró que este estándar se calibra al niño individual. El progreso debe reflejar el potencial real del niño, no una línea de base conveniente.'}},
+      { id:'end-meaning', title:{en:'What This Means for Your Child\'s IEP',es:'Qué Significa Esto para el IEP de Su Hijo'},
+        body:{en:'After Endrew F., the following are no longer legally acceptable: goals that are identical to prior-year goals without justification; IEPs that aim for minimal advancement; refusals to update goals even when a student has mastered them; and goals that do not reflect the student\'s current potential. The school must be able to explain why each goal is calibrated to your child\'s individual circumstances and how it represents real, meaningful growth — not just compliance on paper.',
+              es:'Después de Endrew F., los siguientes ya no son legalmente aceptables: metas idénticas a las del año anterior sin justificación; IEP que apuntan a un avance mínimo; negativas a actualizar metas incluso cuando un estudiante las ha dominado; y metas que no reflejan el potencial actual del estudiante. La escuela debe poder explicar por qué cada meta está calibrada a las circunstancias individuales de su hijo.'}},
+      { id:'end-use', title:{en:'How to Use This Case in Your IEP Meeting',es:'Cómo Usar Este Caso en la Reunión del IEP'},
+        body:{en:'You can cite Endrew F. directly: "Under Endrew F. v. Douglas County (2017), my child\'s IEP must be reasonably calculated to enable progress appropriate to their circumstances — not merely trivial advancement. I am requesting that each goal reflect my child\'s current potential and that the team document the basis for concluding that these goals are appropriately ambitious." You do not need an attorney to invoke a Supreme Court standard. It is your legal right.',
+              es:'Puede citar Endrew F. directamente: "Bajo Endrew F. v. Douglas County (2017), el IEP de mi hijo debe estar razonablemente calculado para permitir un progreso apropiado a sus circunstancias, no solo un avance trivial. Solicito que cada meta refleje el potencial actual de mi hijo y que el equipo documente la base para concluir que estas metas son apropiadamente ambiciosas." No necesita un abogado para invocar un estándar de la Corte Suprema. Es su derecho legal.'}},
+    ];
+    return (
+      <section id="main-content" className="max-w-4xl mx-auto p-4 mt-4 fade-in" aria-labelledby="end-h">
+        {/* Hero */}
+        <div className="bg-slate-800 text-white p-10 rounded-[3rem] mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" aria-hidden="true"></div>
+          <p className="text-[10px] font-black tracking-widest uppercase text-emerald-400 mb-3">{t('Supreme Court · 2017 · Unanimous','Corte Suprema · 2017 · Unánime')}</p>
+          <h2 id="end-h" className="text-4xl font-bold text-white mb-3" style={{fontFamily:'var(--font-display)'}}>
+            Endrew F. v. Douglas County
+          </h2>
+          <p className="text-xl text-slate-300 mb-5 leading-relaxed">
+            {t('580 U.S. 386 (2017) · Chief Justice John Roberts, writing for a unanimous Court',
+               '580 U.S. 386 (2017) · Presidente del Tribunal John Roberts, por una Corte unánime')}
+          </p>
+          <div className="bg-white/10 rounded-2xl p-5 border border-white/10">
+            <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-2">{t('The Ruling, in Full','El Fallo, en Completo')}</p>
+            <p className="text-lg font-bold text-white leading-relaxed">
+              {t('"A school must offer an IEP reasonably calculated to enable a child to make progress appropriate in light of the child\'s circumstances."',
+                 '"Una escuela debe ofrecer un IEP razonablemente calculado para permitir que un niño progrese apropiadamente a la luz de las circunstancias del niño."')}
+            </p>
+            <p className="text-xs text-slate-400 mt-2">— Endrew F. v. Douglas County School District, 580 U.S. 386 (2017)</p>
+          </div>
+          <ReadBtn text={t('"A school must offer an IEP reasonably calculated to enable a child to make progress appropriate in light of the child\'s circumstances." Endrew F. v. Douglas County School District, 580 U.S. 386, 2017.',
+                          '"Una escuela debe ofrecer un IEP razonablemente calculado para permitir que un niño progrese apropiadamente a la luz de las circunstancias del niño." Endrew F. v. Douglas County, 2017.')}
+            id="endrew-quote" ra={ra} label="The Endrew F. ruling" />
+        </div>
+
+        <div className="space-y-5">
+          {sections.map(sec => (
+            <div key={sec.id} className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h3 className="text-xl font-bold text-slate-800">{sec.title[language]}</h3>
+                <ReadBtn text={`${sec.title[language]}. ${sec.body[language]}`} id={sec.id} ra={ra} label={sec.title[language]} />
+              </div>
+              <p className="text-slate-600 leading-relaxed">{sec.body[language]}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Key quote box */}
+        <div className="mt-6 bg-emerald-50 border-l-8 border-emerald-500 p-7 rounded-r-3xl">
+          <p className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-2">{t('Bottom Line for Parents','Conclusión para los Padres')}</p>
+          <p className="text-base font-bold text-slate-800 leading-relaxed">
+            {t('If your child\'s IEP contains the same goals year after year — or goals that aim for only minimal progress — you have the legal authority, grounded in a unanimous Supreme Court decision, to demand revision. "Appropriately ambitious" is not a preference. It is the law.',
+               'Si el IEP de su hijo contiene las mismas metas año tras año, o metas que apuntan a un progreso mínimo, tiene la autoridad legal, fundamentada en una decisión unánime de la Corte Suprema, para exigir una revisión. "Apropiadamente ambicioso" no es una preferencia. Es la ley.')}
+          </p>
+        </div>
+      </section>
+    );
+  };
+
+  // ── SEL ─────────────────────────────────────────────────────────────────
+  const SelView = () => {
+    const sections = [
+      { id:'sel-comm', title:{en:'Behavior is Communication',es:'El Comportamiento es Comunicación'},
+        body:{en:'When a student with a disability demonstrates challenging behavior, IDEA requires the IEP team to consider "the use of positive behavioral interventions and supports" — not punishment or exclusion. Research in special education consistently shows that challenging behavior is almost always a communication skill deficit: the student has not yet learned an acceptable way to get their need met, not that they are choosing to misbehave. Schools that respond to behavior with punishment alone are not meeting their legal obligation.',
+              es:'Cuando un estudiante con una discapacidad demuestra comportamientos desafiantes, IDEA requiere que el equipo del IEP considere el uso de intervenciones conductuales positivas, no el castigo o la exclusión. La investigación muestra consistentemente que el comportamiento desafiante casi siempre es un déficit de habilidades de comunicación. Las escuelas que responden al comportamiento solo con castigo no están cumpliendo con su obligación legal.'}},
+      { id:'sel-reg', title:{en:'Regulation Must Precede Instruction',es:'La Regulación Debe Preceder a la Instrucción'},
+        body:{en:'A student who is emotionally dysregulated cannot access academic content. The brain\'s threat response system overrides the prefrontal cortex — the part responsible for learning, reasoning, and self-control. This is neuroscience, not an excuse. An IEP that demands academic performance without addressing the regulation skills that make academic performance possible is both clinically and legally insufficient.',
+              es:'Un estudiante emocionalmente desregulado no puede acceder al contenido académico. El sistema de respuesta al estrés del cerebro anula la corteza prefrontal, la parte responsable del aprendizaje. Un IEP que exige rendimiento académico sin abordar las habilidades de regulación es tanto clínica como legalmente insuficiente.'}},
+      { id:'sel-fba', title:{en:'The FBA: Finding the Function',es:'La FBA: Encontrar la Función'},
+        body:{en:'A Functional Behavior Assessment investigates three elements: the Antecedent (what happens before the behavior — the trigger or setting event), the Behavior (what the behavior actually looks like — operationally defined), and the Consequence (what happens after — what the student gains or avoids). The function is the WHY. Common functions include: to gain attention, to escape a task, to access something desired, or to meet a sensory need. You cannot build an effective BIP without first identifying the function.',
+              es:'Una Evaluación Funcional del Comportamiento investiga tres elementos: el Antecedente (qué sucede antes del comportamiento), el Comportamiento (cómo se ve el comportamiento) y la Consecuencia (qué sucede después, qué gana o evita el estudiante). No se puede construir un BIP efectivo sin primero identificar la función.'}},
+      { id:'sel-bip', title:{en:'The BIP: Building the Response',es:'El BIP: Construir la Respuesta'},
+        body:{en:'A Behavior Intervention Plan must include: identification of the behavior and its function; antecedent strategies (how to prevent the behavior); teaching strategies (what replacement behavior will be taught); reinforcement strategies (how to strengthen the replacement behavior); and crisis protocols. A BIP is a legal document — every adult working with the student is required to implement it consistently, and deviation from it without IEP team approval may constitute a denial of FAPE.',
+              es:'Un Plan de Intervención de Comportamiento debe incluir: identificación del comportamiento y su función; estrategias de antecedente (cómo prevenir el comportamiento); estrategias de enseñanza (qué comportamiento de reemplazo se enseñará); estrategias de refuerzo; y protocolos de crisis. Un BIP es un documento legal — cada adulto que trabaja con el estudiante debe implementarlo consistentemente.'}},
+      { id:'sel-rights', title:{en:'Your Rights When Behavior is Addressed Through Discipline',es:'Sus Derechos Cuando el Comportamiento se Aborda a Través de Medidas Disciplinarias'},
+        body:{en:'If your child is removed from their educational setting for more than 10 cumulative school days due to behavior, IDEA requires a Manifestation Determination Review. The team must determine: (1) Was the conduct caused by the disability? (2) Was the conduct a direct result of the school\'s failure to implement the IEP? If the answer to either is yes, the school cannot proceed with expulsion, must conduct a functional behavioral assessment, and must develop a behavioral intervention plan.',
+              es:'Si su hijo es removido de su entorno educativo por más de 10 días escolares acumulados debido al comportamiento, IDEA requiere una Revisión de Determinación de Manifestación. El equipo debe determinar si la conducta fue causada por la discapacidad o fue resultado directo de la falla de la escuela en implementar el IEP.'}},
+    ];
+    return (
+      <section id="main-content" className="max-w-4xl mx-auto p-4 mt-4 fade-in" aria-labelledby="sel-h">
+        <h2 id="sel-h" className="text-4xl font-bold text-rose-500 mb-8 border-l-8 border-rose-500 pl-6 py-2" style={{fontFamily:'var(--font-display)'}}>
+          3. {t('SEL & Behavior Support','SEL y Apoyo Conductual')}
+        </h2>
+        <div className="space-y-5">
+          {sections.map(sec => (
+            <div key={sec.id} className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h3 className="text-xl font-bold text-slate-800">{sec.title[language]}</h3>
+                <ReadBtn text={`${sec.title[language]}. ${sec.body[language]}`} id={sec.id} ra={ra} label={sec.title[language]} />
+              </div>
+              <p className="text-slate-600 leading-relaxed">{sec.body[language]}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // ── GLOSSARY ─────────────────────────────────────────────────────────────
+  const TermsView = () => (
+    <section id="main-content" className="max-w-7xl mx-auto p-4 mt-4 fade-in" aria-labelledby="gloss-h">
+      <div className="flex flex-col lg:flex-row justify-between items-start gap-5 mb-7">
+        <div className="border-l-8 border-amber-500 pl-6 py-1">
+          <h2 id="gloss-h" className="text-4xl font-bold text-amber-500" style={{fontFamily:'var(--font-display)'}}>
+            4. {t('Bilingual Glossary','Glosario Bilingüe')}
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">{t('21 terms · searchable · read aloud on every card','21 términos · buscable · lectura en voz alta en cada tarjeta')}</p>
+        </div>
+        <div className="relative">
+          <label htmlFor="term-search" className="sr-only">{t('Search IEP terms','Buscar términos del IEP')}</label>
+          <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
+          <input id="term-search" type="search"
+            placeholder={t('Search 21 terms…','Buscar 21 términos…')}
+            className="pl-11 pr-5 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400 w-64 shadow-sm bg-white"
+            value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+      </div>
+
+      <fieldset className="mb-6" aria-label={t('Filter by category','Filtrar por categoría')}>
+        <legend className="sr-only">{t('Filter terms by category','Filtrar términos por categoría')}</legend>
+        <div className="flex flex-wrap gap-2">
+          {[{v:'all',l:{en:'All (21)',es:'Todos (21)'},c:'bg-slate-200 text-slate-700 hover:bg-slate-300'},
+            {v:'red',l:{en:'● Legal Rights (7)',es:'● Derechos Legales (7)'},c:'bg-red-100 text-red-700 hover:bg-red-200'},
+            {v:'yellow',l:{en:'● IEP Structure (7)',es:'● Estructura IEP (7)'},c:'bg-amber-100 text-amber-700 hover:bg-amber-200'},
+            {v:'green',l:{en:'● Behavior & Progress (7)',es:'● Conducta y Progreso (7)'},c:'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'},
+          ].map(btn => (
+            <button key={btn.v} onClick={() => setFilter(btn.v)} aria-pressed={filter===btn.v}
+              className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${btn.c} ${filter===btn.v?'ring-2 ring-offset-1 ring-current':''}`}>
+              {btn.l[language]}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      {filteredTerms.length === 0 && (
+        <div role="status" className="text-center py-16 text-slate-400">
+          <i className="fa-solid fa-magnifying-glass text-4xl mb-3 block" aria-hidden="true"></i>
+          <p>{t('No terms match your search.','Ningún término coincide con su búsqueda.')}</p>
+        </div>
+      )}
+
+      <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" aria-label={t('IEP Terms','Términos del IEP')}>
+        {filteredTerms.map(term => {
+          const saved = savedTerms.includes(term.id);
+          return (
+            <li key={term.id} className={`p-6 bg-white rounded-3xl border-l-8 shadow-sm flex flex-col relative card-hover ${BORDER[term.type]}`}>
+              <span className={`absolute top-4 left-6 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${BADGE[term.type]}`}>
+                {TYPE_LABEL[term.type][language]}
+              </span>
+              <div className="absolute top-4 right-4 flex gap-1">
+                <ReadBtn text={`${term.name[language]}. ${term.alt[language]}. ${term.def[language]}`}
+                  id={`term-${term.id}`} ra={ra} label={term.name[language]} />
+                <button onClick={() => toggleT(term.id)} aria-pressed={saved}
+                  aria-label={saved?t(`Remove ${term.name[language]}`,`Quitar ${term.name[language]}`):t(`Save ${term.name[language]}`,`Guardar ${term.name[language]}`)}
+                  className={`p-2 rounded-full transition-colors ${saved?'text-amber-500 bg-amber-50':'text-slate-400 hover:bg-slate-50'}`}>
+                  <i className={`fa-bookmark ${saved?'fa-solid':'fa-regular'}`} aria-hidden="true"></i>
+                </button>
+              </div>
+              <div className="flex items-start gap-3 mt-7 mb-3 pr-16">
+                <span className={`p-3 rounded-xl shrink-0 ${ICON_BG[term.type]}`} aria-hidden="true">
+                  <i className={`${term.icon} text-lg`}></i>
+                </span>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-800 leading-tight">{term.name[language]}</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mt-0.5">{term.alt[language]}</p>
+                </div>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-sm mt-auto">{term.def[language]}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+
+  // ── ADVOCACY (12 scripts) ────────────────────────────────────────────────
+  const AdvocacyView = () => {
+    const cats = ['all','progress','services','placement','behavior','evaluation','discipline','participation','language','transition'];
+    return (
+      <section id="main-content" className="max-w-5xl mx-auto p-4 mt-4 fade-in" aria-labelledby="adv-h">
+        <h2 id="adv-h" className="text-4xl font-bold text-slate-700 mb-2 border-l-8 border-slate-700 pl-6 py-2" style={{fontFamily:'var(--font-display)'}}>
+          5. {t('12 Advocacy Action Scripts','12 Guiones de Acción')}
+        </h2>
+        <p className="text-slate-500 mb-6 pl-6 text-sm">
+          {t('Select your situation. Understand the legal basis. Use the script — or email it directly to the school.',
+             'Seleccione su situación. Comprenda la base legal. Use el guión o envíelo directamente a la escuela.')}
+        </p>
+
+        {/* Category filter */}
+        <fieldset className="mb-8" aria-label={t('Filter scripts by issue','Filtrar guiones por problema')}>
+          <legend className="sr-only">{t('Filter by issue category','Filtrar por categoría')}</legend>
+          <div className="flex flex-wrap gap-2">
+            {cats.map(c => (
+              <button key={c} onClick={() => setCat(c)} aria-pressed={catFilter===c}
+                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${catFilter===c?'bg-slate-800 text-white':'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                {c==='all' ? t(`All (${SCENARIOS.length})`,`Todos (${SCENARIOS.length})`) : CAT_LABEL[c][language]}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="space-y-7">
+          {filteredScen.map((s, idx) => {
+            const saved = savedScen.includes(s.id);
+            return (
+              <article key={s.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative" aria-labelledby={`scen-${s.id}-h`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {t(`Script ${idx+1} of ${filteredScen.length}`,`Guión ${idx+1} de ${filteredScen.length}`)}
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                    {CAT_LABEL[s.cat][language]}
+                  </span>
+                </div>
+
+                <div className="absolute top-5 right-5 flex items-center gap-1 bg-slate-50 p-1 rounded-full border border-slate-100">
+                  <ReadBtn text={`${s.feeling[language]} ${s.connection[language]} Your script: ${s.action[language]}`}
+                    id={`scen-${s.id}`} ra={ra} label={`Script about ${s.feeling[language]}`} />
+                  <button onClick={() => copyText(s.action[language])} aria-label={t('Copy action script','Copiar guión')}
+                    className="p-2 text-slate-500 hover:text-sky-600 hover:bg-white rounded-full transition-all">
+                    <i className="fa-regular fa-copy" aria-hidden="true"></i>
+                  </button>
+                  <a href={getMailtoLink(s.action[language])} aria-label={t('Email this script','Enviar por correo')}
+                    className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-white rounded-full transition-all">
+                    <i className="fa-regular fa-envelope" aria-hidden="true"></i>
+                  </a>
+                  <div className="w-px h-5 bg-slate-200 mx-0.5" aria-hidden="true"></div>
+                  <button onClick={() => toggleS(s.id)} aria-pressed={saved}
+                    aria-label={saved?t('Remove from prep sheet','Quitar de la hoja'):t('Save to prep sheet','Guardar en la hoja')}
+                    className={`p-2 rounded-full transition-all ${saved?'text-amber-500 bg-white shadow-sm':'text-slate-400 hover:bg-white'}`}>
+                    <i className={`fa-bookmark ${saved?'fa-solid':'fa-regular'}`} aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-5 mb-6 pr-40 mt-3">
+                  <div className="p-4 bg-slate-50 rounded-2xl shrink-0" aria-hidden="true">
+                    <i className={s.iconCls}></i>
+                  </div>
+                  <p id={`scen-${s.id}-h`} className="text-xl font-bold text-slate-800 leading-snug">{s.feeling[language]}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-5 border-t border-slate-100">
+                  <div className="p-5 bg-slate-50 rounded-2xl">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">{t('Legal Basis','Base Legal')}</p>
+                    <p className="text-slate-700 leading-relaxed text-sm">{s.connection[language]}</p>
+                  </div>
+                  <div className="p-5 bg-sky-50 rounded-2xl border-l-8 border-sky-400">
+                    <p className="text-[10px] font-black uppercase text-sky-600 tracking-widest mb-2">{t('Your Script','Su Guión')}</p>
+                    <p className="font-bold text-slate-800 leading-relaxed text-sm">{s.action[language]}</p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
+
+  // ── PREP SHEET ───────────────────────────────────────────────────────────
+  const PrepView = () => (
+    <section id="main-content" className="max-w-4xl mx-auto p-4 mt-4 fade-in" aria-labelledby="prep-h">
+      <div className="bg-amber-50 p-8 rounded-[3rem] text-center mb-8 border border-amber-100 print:border-none print:bg-white print:p-0">
+        <i className="fa-solid fa-bookmark text-5xl text-amber-500 mb-3 block print-hidden" aria-hidden="true"></i>
+        <h2 id="prep-h" className="text-3xl font-bold text-amber-800 print:text-black" style={{fontFamily:'var(--font-display)'}}>
+          {t('My IEP Prep Sheet','Mi Hoja de Preparación')}
+        </h2>
+        <p className="text-amber-700 mt-1 text-sm">{total} {t('item(s) saved','elemento(s) guardado(s)')}</p>
+        {total > 0 && (
+          <button onClick={() => window.print()} aria-label={t('Print prep sheet','Imprimir hoja')}
+            className="mt-5 px-7 py-3 bg-slate-800 text-white rounded-full font-bold shadow hover:bg-slate-700 transition print-hidden inline-flex items-center gap-2">
+            <i className="fa-solid fa-print" aria-hidden="true"></i>{t('Print','Imprimir')}
+          </button>
+        )}
+      </div>
+
+      {total === 0 ? (
+        <div className="text-center py-16 bg-white rounded-[3rem] border border-slate-100 shadow-sm print-hidden">
+          <i className="fa-regular fa-bookmark text-6xl text-slate-200 mb-4 block" aria-hidden="true"></i>
+          <p className="text-lg font-bold text-slate-400 mb-1">{t('Your prep sheet is empty.','Su hoja está vacía.')}</p>
+          <p className="text-slate-400 text-sm mb-5">{t('Save terms or scripts while browsing.','Guarde términos o guiones mientras navega.')}</p>
+          <button onClick={() => setView('advocacy')} className="px-6 py-3 bg-sky-500 text-white rounded-full font-bold shadow hover:bg-sky-600 transition">
+            {t('Browse Action Scripts','Ver Guiones')}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-10">
+          {savedTerms.length > 0 && (
+            <div className="print-break">
+              <h3 className="text-xl font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2 print:text-black print:border-black">{t('Saved Vocabulary','Vocabulario Guardado')}</h3>
+              <ul className="space-y-3">
+                {TERMS.filter(x => savedTerms.includes(x.id)).map(term => (
+                  <li key={term.id} className={`bg-white p-5 rounded-2xl shadow-sm border-l-8 ${BORDER[term.type]} flex justify-between items-start gap-4 print:border-l-4 print:border-slate-800 print:shadow-none`}>
+                    <div>
+                      <h4 className="font-bold print:text-black">{term.name[language]} <span className="text-xs font-normal text-slate-400">— {term.alt[language]}</span></h4>
+                      <p className="text-slate-600 text-sm mt-1 leading-relaxed print:text-black">{term.def[language]}</p>
+                    </div>
+                    <button onClick={() => toggleT(term.id)} aria-label={t(`Remove ${term.name[language]}`,`Quitar ${term.name[language]}`)}
+                      className="text-slate-300 hover:text-red-500 p-1 shrink-0 print-hidden">
+                      <i className="fa-solid fa-xmark text-xl" aria-hidden="true"></i>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {savedScen.length > 0 && (
+            <div>
+              <h3 className="text-xl font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2 mt-4 print:text-black print:border-black">{t('Saved Action Scripts','Guiones Guardados')}</h3>
+              <ul className="space-y-5">
+                {SCENARIOS.filter(s => savedScen.includes(s.id)).map(s => (
+                  <li key={s.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 print:border-slate-300 print:rounded-lg print:shadow-none print-break">
+                    <p className="text-[10px] font-black uppercase text-sky-600 tracking-widest mb-1">{t('Your Script:','Su Guión:')}</p>
+                    <p className="font-bold text-slate-800 print:text-black mb-3 leading-relaxed">{s.action[language]}</p>
+                    <div className="border-t border-slate-100 pt-3 print:border-slate-300">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{t('Legal Basis:','Base Legal:')}</p>
+                      <p className="text-sm text-slate-600 print:text-black leading-relaxed">{s.connection[language]}</p>
+                    </div>
+                    <div className="flex gap-2 mt-4 print-hidden">
+                      <button onClick={() => ra.speak(s.action[language], `prep-${s.id}`)} aria-label={t('Read aloud','Leer en voz alta')} className="p-3 bg-slate-50 text-slate-600 hover:text-sky-600 rounded-full"><i className="fa-solid fa-volume-high" aria-hidden="true"></i></button>
+                      <button onClick={() => copyText(s.action[language])} aria-label={t('Copy','Copiar')} className="p-3 bg-slate-50 text-slate-600 hover:text-sky-600 rounded-full"><i className="fa-regular fa-copy" aria-hidden="true"></i></button>
+                      <a href={getMailtoLink(s.action[language])} aria-label={t('Email','Enviar')} className="p-3 bg-slate-50 text-slate-600 hover:text-emerald-600 rounded-full"><i className="fa-regular fa-envelope" aria-hidden="true"></i></a>
+                      <button onClick={() => toggleS(s.id)} aria-label={t('Remove','Quitar')} className="p-2 ml-1 text-slate-300 hover:text-red-500"><i className="fa-solid fa-xmark text-lg" aria-hidden="true"></i></button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+
+  // ── INTAKE SCREEN ────────────────────────────────────────────────────────
+  const IntakeView = () => (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 fade-in">
+      <i className="fa-regular fa-compass text-7xl text-sky-500 mb-6 block" aria-hidden="true"></i>
+      <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 mb-3 tracking-tight text-center" style={{fontFamily:'var(--font-display)'}}>
+        {t('The IEP Journey','El Viaje del IEP')}
+      </h1>
+      <p className="text-lg text-slate-500 mb-12 text-center max-w-xl leading-relaxed">
+        {t('A bilingual, interactive guide to your rights under IDEA. Who are you?',
+           'Una guía bilingüe e interactiva de sus derechos bajo IDEA. ¿Quién eres?')}
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-2xl">
+        {/* Parent card */}
+        <button onClick={() => chooseRole('parent')}
+          aria-label={t('I am a parent or guardian','Soy padre, madre o tutor/a')}
+          className="bg-sky-500 hover:bg-sky-600 p-8 rounded-[2.5rem] text-white shadow-lg card-hover flex flex-col items-center text-center border-4 border-white focus:outline-none focus:ring-4 focus:ring-sky-300"
+          aria-label={t('I am a parent or guardian','Soy padre, madre o tutor/a')}>
+          <div className="bg-white/20 p-5 rounded-2xl mb-4">
+            <i className="fa-solid fa-people-roof text-4xl" aria-hidden="true"></i>
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{t('Parent / Guardian','Padre / Tutor')}</h2>
+          <p className="text-white/80 text-sm leading-relaxed">
+            {t('Understand your child\'s rights, navigate IEP meetings, and advocate with confidence.',
+               'Comprenda los derechos de su hijo, navegue las reuniones del IEP y defiéndase con confianza.')}
+          </p>
+        </button>
+
+        {/* Student card */}
+        <button onClick={() => chooseRole('student')}
+          aria-label={t('I am a student','Soy estudiante')}
+          className="bg-violet-600 hover:bg-violet-700 p-8 rounded-[2.5rem] text-white shadow-lg card-hover flex flex-col items-center text-center border-4 border-white focus:outline-none focus:ring-4 focus:ring-violet-300"
+          aria-label={t('I am a student','Soy estudiante')}>
+          <div className="bg-white/20 p-5 rounded-2xl mb-4">
+            <i className="fa-solid fa-user-graduate text-4xl" aria-hidden="true"></i>
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{t('Student','Estudiante')}</h2>
+          <p className="text-white/80 text-sm leading-relaxed">
+            {t('Learn what your IEP means, speak up at your meetings, and know your rights.',
+               'Aprende qué significa tu IEP, habla en tus reuniones y conoce tus derechos.')}
+          </p>
+        </button>
+      </div>
+
+      <p className="mt-8 text-xs text-slate-400 text-center">
+        {t('You can switch roles at any time using the menu above.',
+           'Puedes cambiar de rol en cualquier momento usando el menú de arriba.')}
+      </p>
+    </div>
+  );
+
+  // ── STUDENT HOME ─────────────────────────────────────────────────────────
+  const StudentHomeView = () => (
+    <div className="max-w-4xl mx-auto px-4 py-10 fade-in">
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 bg-violet-100 text-violet-700 px-4 py-2 rounded-full text-sm font-bold mb-5">
+          <i className="fa-solid fa-user-graduate" aria-hidden="true"></i>
+          {t('Student Mode','Modo Estudiante')}
+        </div>
+        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 mb-4 tracking-tight" style={{fontFamily:'var(--font-display)'}}>
+          {t('Your IEP. Your Rights. Your Voice.','Tu IEP. Tus Derechos. Tu Voz.')}
+        </h1>
+        <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+          {t('Your IEP is a legal document about your future. You have the right to understand it, participate in it, and speak up when something isn\'t working.',
+             'Tu IEP es un documento legal sobre tu futuro. Tienes el derecho de entenderlo, participar en él y hablar cuando algo no está funcionando.')}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+        {[
+          { view:'student-know',    bg:'bg-violet-500', icon:'fa-solid fa-lightbulb',      num:'1',
+            title:{en:'Know Your IEP',es:'Conoce Tu IEP'},
+            sub:{en:'What every section means, in plain language',es:'Qué significa cada sección, en lenguaje claro'}},
+          { view:'student-age18',   bg:'bg-amber-500',  icon:'fa-solid fa-key',            num:'2',
+            title:{en:'Turning 18: Your Rights Transfer',es:'Cumplir 18: Tus Derechos'},
+            sub:{en:'Age of Majority, Transfer of Rights, Endrew F.',es:'Mayoría de edad, Transferencia de derechos'}},
+          { view:'student-voice',   bg:'bg-emerald-600',icon:'fa-solid fa-hand-raised',    num:'3',
+            title:{en:'Speak Up at Your Meeting',es:'Habla en Tu Reunión'},
+            sub:{en:'How to participate and what to say',es:'Cómo participar y qué decir'}},
+          { view:'student-scripts', bg:'bg-rose-500',   icon:'fa-regular fa-message',      num:'4',
+            title:{en:'Self-Advocacy Scripts',es:'Guiones de Autodefensa'},
+            sub:{en:'8 ready-to-use scripts for common situations',es:'8 guiones listos para situaciones comunes'}},
+        ].map(card => (
+          <button key={card.view} onClick={() => setView(card.view)}
+            className={`${card.bg} p-6 rounded-3xl text-white shadow-md card-hover flex flex-col items-center text-center border-4 border-white focus:outline-none focus:ring-4 focus:ring-white/50`}
+            aria-label={`${card.num}. ${card.title[language]}: ${card.sub[language]}`}>
+            <div className="mb-3 bg-white/20 p-4 rounded-2xl">
+              <i className={`${card.icon} text-2xl`} aria-hidden="true"></i>
+            </div>
+            <h2 className="font-bold text-lg mb-1">{card.num}. {card.title[language]}</h2>
+            <p className="text-white/80 text-xs leading-snug">{card.sub[language]}</p>
+          </button>
+        ))}
+      </div>
+
+      {/* Quick reminder bar */}
+      <div className="mt-10 bg-violet-50 border border-violet-200 rounded-2xl p-5 max-w-3xl mx-auto">
+        <p className="text-sm text-violet-800 leading-relaxed text-center font-medium">
+          {t('⚡  Quick reminder: Your IEP belongs to you. You can ask to see it anytime. You can ask questions at any meeting. You can disagree — and that disagreement must be documented.',
+             '⚡  Recordatorio rápido: Tu IEP te pertenece a ti. Puedes pedir verlo en cualquier momento. Puedes hacer preguntas en cualquier reunión. Puedes estar en desacuerdo, y ese desacuerdo debe ser documentado.')}
+        </p>
+      </div>
+    </div>
+  );
+
+  // ── STUDENT: KNOW YOUR IEP ────────────────────────────────────────────────
+  const StudentKnowView = () => {
+    const sections = [
+      { id:'sk-what', title:{en:'What Is an IEP?',es:'¿Qué Es un IEP?'},
+        body:{en:'An IEP — Individualized Education Program — is a legal document that describes the special education services and supports you are entitled to receive. It is specifically written for you, based on your unique strengths and needs. The school is legally required to follow it. If something in your IEP is not happening, that is a legal issue — not just a preference.',
+              es:'Un IEP — Programa de Educación Individualizada — es un documento legal que describe los servicios y apoyos de educación especial a los que tienes derecho. Está escrito específicamente para ti, basado en tus fortalezas y necesidades únicas. La escuela está legalmente obligada a seguirlo.'}},
+      { id:'sk-sections', title:{en:'The Key Parts of Your IEP',es:'Las Partes Clave de Tu IEP'},
+        body:{en:'PLAAFP — your current skill levels, the starting point for everything. Annual Goals — what you should be able to do by the end of the year (they must be challenging, not just easy). Services — exactly what help you receive, how often, and for how long. Accommodations — changes to how you take tests or receive instruction (extra time, read-aloud, etc.). Transition Plan — your goals for after high school, including work, education, and living.',
+              es:'PLAAFP — tus niveles de habilidades actuales, el punto de partida para todo. Metas Anuales — lo que debes poder hacer al final del año (deben ser desafiantes, no solo fáciles). Servicios — exactamente qué ayuda recibes, con qué frecuencia y por cuánto tiempo. Acomodaciones — cambios en cómo tomas exámenes o recibes instrucción. Plan de Transición — tus metas para después de la escuela secundaria.'}},
+      { id:'sk-goals', title:{en:'Your Goals Must Challenge You',es:'Tus Metas Deben Desafiarte'},
+        body:{en:'The Supreme Court ruled in Endrew F. v. Douglas County (2017) that IEP goals must be "appropriately ambitious" — not just easy or minimal. If you have already mastered a goal, or if your goals feel way too easy, you have the right to ask the team to update them. Goals that don\'t challenge you are not legal under IDEA.',
+              es:'La Corte Suprema dictaminó en Endrew F. v. Douglas County (2017) que las metas del IEP deben ser "apropiadamente ambiciosas", no solo fáciles o mínimas. Si ya dominas una meta o si tus metas se sienten demasiado fáciles, tienes derecho a pedir al equipo que las actualice.'}},
+      { id:'sk-services', title:{en:'You Are Entitled to Every Service in Your IEP',es:'Tienes Derecho a Cada Servicio en Tu IEP'},
+        body:{en:'Every service listed in your IEP must be delivered — on time, at the frequency listed, by qualified staff. If you are not receiving a service (for example, your speech therapy keeps getting cancelled), the school is violating a legal obligation. You have the right to ask for a log of your service delivery and to request make-up services for what was missed.',
+              es:'Cada servicio listado en tu IEP debe ser entregado, a tiempo, con la frecuencia indicada, por personal calificado. Si no estás recibiendo un servicio (por ejemplo, tu terapia de habla sigue siendo cancelada), la escuela está violando una obligación legal.'}},
+    ];
+    return (
+      <section id="main-content" className="max-w-4xl mx-auto p-4 mt-4 fade-in" aria-labelledby="sk-h">
+        <h2 id="sk-h" className="text-4xl font-bold text-violet-600 mb-8 border-l-8 border-violet-500 pl-6 py-2" style={{fontFamily:'var(--font-display)'}}>
+          1. {t('Know Your IEP','Conoce Tu IEP')}
+        </h2>
+        <div className="space-y-5">
+          {sections.map(sec => (
+            <div key={sec.id} className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h3 className="text-xl font-bold text-slate-800">{sec.title[language]}</h3>
+                <ReadBtn text={`${sec.title[language]}. ${sec.body[language]}`} id={sec.id} ra={ra} label={sec.title[language]} />
+              </div>
+              <p className="text-slate-600 leading-relaxed">{sec.body[language]}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // ── STUDENT: AGE 18 / TRANSFER OF RIGHTS ─────────────────────────────────
+  const StudentAge18View = () => {
+    const sections = [
+      { id:'a18-when', title:{en:'When Do Your Rights Transfer?',es:'¿Cuándo Se Transfieren Tus Derechos?'},
+        body:{en:'Under IDEA, when you turn 18, all the rights that belonged to your parents — consent for evaluations, agreement to IEP changes, placement decisions — transfer directly to you. You become the legal decision-maker for your own education. In Illinois, this happens on your 18th birthday unless a court has assigned a legal guardian. The school must notify you of this transfer at least one year before you turn 18 (34 CFR § 300.520).',
+              es:'Bajo IDEA, cuando cumples 18 años, todos los derechos que pertenecían a tus padres — consentimiento para evaluaciones, acuerdo con cambios del IEP, decisiones de colocación — se transfieren directamente a ti. Te conviertes en el tomador de decisiones legal para tu propia educación (34 CFR § 300.520).'}},
+      { id:'a18-what', title:{en:'What Changes at 18',es:'Qué Cambia a los 18'},
+        body:{en:'Before 18: parents sign consent forms, receive all notices, and attend as your legal representatives. After 18: the school must send all IEP notices directly to you, must obtain your consent before any evaluation or placement change, and must involve you as the primary decision-maker. You can still invite your parents to be involved — but the legal authority is now yours.',
+              es:'Antes de los 18: los padres firman formularios de consentimiento, reciben todos los avisos y asisten como tus representantes legales. Después de los 18: la escuela debe enviarte todos los avisos del IEP directamente a ti, obtener tu consentimiento antes de cualquier evaluación o cambio de colocación, e involucrarte como el tomador de decisiones principal.'}},
+      { id:'a18-endrew', title:{en:'The Endrew F. Standard Still Protects You',es:'El Estándar Endrew F. Todavía Te Protege'},
+        body:{en:'Even after your rights transfer at 18, the Endrew F. standard (2017) still applies. Your IEP must be "appropriately ambitious" and calculated for real progress — not minimal advancement. If you are still in school as a young adult, you have the same right to a challenging, meaningful IEP as any younger student. You can invoke this standard directly in any IEP meeting.',
+              es:'Incluso después de que tus derechos se transfieran a los 18 años, el estándar Endrew F. (2017) todavía se aplica. Tu IEP debe ser "apropiadamente ambicioso" y calculado para un progreso real. Si todavía estás en la escuela como joven adulto/a, tienes el mismo derecho a un IEP desafiante y significativo.'}},
+      { id:'a18-parent', title:{en:'Can Your Parents Still Be Involved?',es:'¿Pueden Tus Padres Seguir Participando?'},
+        body:{en:'Yes — with your permission. You can invite your parents to IEP meetings, share your IEP with them, and designate them to receive notices. The difference is that their involvement is now your choice, not a legal requirement. If you want your parents involved, you can tell the school in writing. If you want to make decisions independently, the school must respect that.',
+              es:'Sí, con tu permiso. Puedes invitar a tus padres a las reuniones del IEP, compartir tu IEP con ellos y designarlos para recibir avisos. La diferencia es que su participación es ahora tu elección, no un requisito legal.'}},
+      { id:'a18-sop', title:{en:'Summary of Performance: Your Exit Document',es:'Resumen de Desempeño: Tu Documento de Salida'},
+        body:{en:'When you graduate or age out of special education, the school must provide a Summary of Performance (SOP) — a document summarizing your academic achievement, functional performance, and recommendations for supporting your goals after school. This document is essential for accessing disability services in college or the workplace. You have the right to receive it before your last IEP ends.',
+              es:'Cuando te gradúas o cumples la edad límite para la educación especial, la escuela debe proporcionar un Resumen de Desempeño (SOP): un documento que resume tu rendimiento académico, desempeño funcional y recomendaciones para apoyar tus metas después de la escuela. Este documento es esencial para acceder a servicios de discapacidad en la universidad o el trabajo.'}},
+    ];
+    return (
+      <section id="main-content" className="max-w-4xl mx-auto p-4 mt-4 fade-in" aria-labelledby="a18-h">
+        <div className="bg-amber-500 text-white p-8 rounded-[2.5rem] mb-8">
+          <p className="text-[10px] font-black tracking-widest uppercase text-amber-200 mb-2">IDEA · 34 CFR § 300.520 · Age of Majority</p>
+          <h2 id="a18-h" className="text-4xl font-bold mb-2" style={{fontFamily:'var(--font-display)'}}>
+            2. {t('Turning 18: Your Rights Transfer','Cumplir 18: Tus Derechos')}
+          </h2>
+          <p className="text-amber-100 leading-relaxed">
+            {t('At 18, you become the legal decision-maker for your own IEP. Here is exactly what that means.',
+               'A los 18 años, te conviertes en el tomador de decisiones legal para tu propio IEP. Esto es exactamente lo que eso significa.')}
+          </p>
+        </div>
+        <div className="space-y-5">
+          {sections.map(sec => (
+            <div key={sec.id} className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h3 className="text-xl font-bold text-slate-800">{sec.title[language]}</h3>
+                <ReadBtn text={`${sec.title[language]}. ${sec.body[language]}`} id={sec.id} ra={ra} label={sec.title[language]} />
+              </div>
+              <p className="text-slate-600 leading-relaxed">{sec.body[language]}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // ── STUDENT: SPEAK UP ────────────────────────────────────────────────────
+  const StudentVoiceView = () => {
+    const tips = [
+      { id:'sv-attend', title:{en:'You Have the Right to Be There',es:'Tienes el Derecho de Estar Ahí'},
+        body:{en:'IDEA requires the school to invite you to your IEP meeting whenever transition is on the agenda — which means almost every meeting from age 14.5 onward in Illinois. Even if no one has been inviting you, you can request to attend. Your presence is not a courtesy; it is legally expected.',
+              es:'IDEA requiere que la escuela te invite a tu reunión del IEP cuando la transición está en la agenda, lo que significa casi todas las reuniones desde los 14.5 años en Illinois. Incluso si nadie te ha estado invitando, puedes solicitar asistir. Tu presencia no es una cortesía; es legalmente esperada.'}},
+      { id:'sv-prep', title:{en:'How to Prepare',es:'Cómo Prepararte'},
+        body:{en:'Before your meeting: read your current IEP and write down 3 things that are working well, 3 things that are not working, and your top goal for after school. Bring this list to the meeting. The team should ask you these questions — but if they don\'t, you can share your notes directly. Preparation is the most powerful self-advocacy tool you have.',
+              es:'Antes de tu reunión: lee tu IEP actual y escribe 3 cosas que están funcionando bien, 3 que no están funcionando y tu meta principal para después de la escuela. Lleva esta lista a la reunión. El equipo debería preguntarte estas cosas, pero si no lo hacen, puedes compartir tus notas directamente.'}},
+      { id:'sv-say', title:{en:'What You Can Say at Your Meeting',es:'Qué Puedes Decir en Tu Reunión'},
+        body:{en:'You can say: "I want to share what\'s working for me and what isn\'t." / "I\'ve already mastered this goal — I want a more challenging one." / "I want this support in my IEP because it actually helps me." / "I disagree with this decision and I want that documented." / "What does this term mean? Can someone explain it in plain language?" Every one of these is appropriate. Every one is your right.',
+              es:'Puedes decir: "Quiero compartir lo que me está funcionando y lo que no." / "Ya domino esta meta, quiero una más desafiante." / "Quiero este apoyo en mi IEP porque realmente me ayuda." / "No estoy de acuerdo con esta decisión y quiero que se documente." Cada una de estas cosas es apropiada. Cada una es tu derecho.'}},
+      { id:'sv-disagree', title:{en:'You Are Allowed to Disagree',es:'Tienes Permitido Estar en Desacuerdo'},
+        body:{en:'If you disagree with something in your IEP meeting — a proposed placement, a goal that doesn\'t fit, a service being removed — you can say so clearly. Your disagreement must be documented in the meeting notes. No adult in the room can force you to agree to a decision about your own education. Disagreement is not disrespectful. It is self-advocacy.',
+              es:'Si no estás de acuerdo con algo en tu reunión del IEP, puedes decirlo claramente. Tu desacuerdo debe ser documentado en las notas de la reunión. Ningún adulto en la sala puede obligarte a estar de acuerdo con una decisión sobre tu propia educación. Estar en desacuerdo no es irrespetuoso. Es autodefensa.'}},
+    ];
+    return (
+      <section id="main-content" className="max-w-4xl mx-auto p-4 mt-4 fade-in" aria-labelledby="sv-h">
+        <h2 id="sv-h" className="text-4xl font-bold text-emerald-600 mb-8 border-l-8 border-emerald-500 pl-6 py-2" style={{fontFamily:'var(--font-display)'}}>
+          3. {t('Speak Up at Your Meeting','Habla en Tu Reunión')}
+        </h2>
+        <div className="space-y-5">
+          {tips.map(sec => (
+            <div key={sec.id} className="bg-white p-7 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h3 className="text-xl font-bold text-slate-800">{sec.title[language]}</h3>
+                <ReadBtn text={`${sec.title[language]}. ${sec.body[language]}`} id={sec.id} ra={ra} label={sec.title[language]} />
+              </div>
+              <p className="text-slate-600 leading-relaxed">{sec.body[language]}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // ── STUDENT: SELF-ADVOCACY SCRIPTS ────────────────────────────────────────
+  const StudentScriptsView = () => (
+    <section id="main-content" className="max-w-5xl mx-auto p-4 mt-4 fade-in" aria-labelledby="ss-h">
+      <h2 id="ss-h" className="text-4xl font-bold text-rose-500 mb-3 border-l-8 border-rose-500 pl-6 py-2" style={{fontFamily:'var(--font-display)'}}>
+        4. {t('8 Self-Advocacy Scripts','8 Guiones de Autodefensa')}
+      </h2>
+      <p className="text-slate-500 mb-8 pl-6 text-sm">
+        {t('Recognize your situation. Understand why it matters. Use the script — or email it.',
+           'Reconoce tu situación. Entiende por qué importa. Usa el guión o envíalo por correo.')}
+      </p>
+      <div className="space-y-7">
+        {STUDENT_SCENARIOS.map((s, idx) => {
+          const saved = savedScen.includes(s.id);
+          return (
+            <article key={s.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative" aria-labelledby={`ss-${s.id}-h`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                  {t(`Script ${idx+1} of ${STUDENT_SCENARIOS.length}`,`Guión ${idx+1} de ${STUDENT_SCENARIOS.length}`)}
+                </span>
+              </div>
+              <div className="absolute top-5 right-5 flex items-center gap-1 bg-slate-50 p-1 rounded-full border border-slate-100">
+                <ReadBtn text={`${s.feeling[language]} ${s.connection[language]} Your script: ${s.action[language]}`}
+                  id={`ss-${s.id}`} ra={ra} label={`Script ${idx+1}`} />
+                <button onClick={() => copyText(s.action[language])} aria-label={t('Copy script','Copiar guión')}
+                  className="p-2 text-slate-500 hover:text-sky-600 hover:bg-white rounded-full transition-all">
+                  <i className="fa-regular fa-copy" aria-hidden="true"></i>
+                </button>
+                <a href={getMailtoLink(s.action[language])} aria-label={t('Email this script','Enviar guión')}
+                  className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-white rounded-full transition-all">
+                  <i className="fa-regular fa-envelope" aria-hidden="true"></i>
+                </a>
+                <div className="w-px h-5 bg-slate-200 mx-0.5" aria-hidden="true"></div>
+                <button onClick={() => toggleS(s.id)} aria-pressed={saved}
+                  aria-label={saved?t('Remove from prep sheet','Quitar de la hoja'):t('Save to prep sheet','Guardar en la hoja')}
+                  className={`p-2 rounded-full transition-all ${saved?'text-amber-500 bg-white shadow-sm':'text-slate-400 hover:bg-white'}`}>
+                  <i className={`fa-bookmark ${saved?'fa-solid':'fa-regular'}`} aria-hidden="true"></i>
+                </button>
+              </div>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-5 mb-6 pr-40 mt-3">
+                <div className="p-4 bg-slate-50 rounded-2xl shrink-0" aria-hidden="true">
+                  <i className={s.iconCls}></i>
+                </div>
+                <p id={`ss-${s.id}-h`} className="text-xl font-bold text-slate-800 leading-snug">{s.feeling[language]}</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-5 border-t border-slate-100">
+                <div className="p-5 bg-slate-50 rounded-2xl">
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">{t('Why It Matters','Por Qué Importa')}</p>
+                  <p className="text-slate-700 leading-relaxed text-sm">{s.connection[language]}</p>
+                </div>
+                <div className="p-5 bg-violet-50 rounded-2xl border-l-8 border-violet-400">
+                  <p className="text-[10px] font-black uppercase text-violet-600 tracking-widest mb-2">{t('Your Script','Tu Guión')}</p>
+                  <p className="font-bold text-slate-800 leading-relaxed text-sm">{s.action[language]}</p>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+
+  // ── RENDER ────────────────────────────────────────────────────────────────
+  return (
+    <div className={`min-h-screen pb-24 text-slate-800 ${isDyslexic?'dyslexic-mode bg-[#F0F4F8]':'bg-[#FAF9F6]'}`}>
+      {toast && (
+        <div role="status" aria-live="polite" className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-2 print-hidden">
+          <i className="fa-solid fa-check text-emerald-400" aria-hidden="true"></i>{toast}
+        </div>
+      )}
+      <Nav />
+      <main id="main-content" tabIndex="-1">
+        {/* Intake screen — shown before role is chosen */}
+        {!role && <IntakeView />}
+
+        {/* Parent mode */}
+        {role==='parent' && view==='home'     && <HomeView />}
+        {role==='parent' && view==='idea'     && <IdeaView />}
+        {role==='parent' && view==='endrew'   && <EndrewView />}
+        {role==='parent' && view==='sel'      && <SelView />}
+        {role==='parent' && view==='terms'    && <TermsView />}
+        {role==='parent' && view==='advocacy' && <AdvocacyView />}
+        {role==='parent' && view==='prep'     && <PrepView />}
+
+        {/* Student mode */}
+        {role==='student' && view==='home'            && <StudentHomeView />}
+        {role==='student' && view==='student-know'    && <StudentKnowView />}
+        {role==='student' && view==='student-age18'   && <StudentAge18View />}
+        {role==='student' && view==='student-voice'   && <StudentVoiceView />}
+        {role==='student' && view==='student-scripts' && <StudentScriptsView />}
+        {role==='student' && view==='terms'           && <TermsView />}
+        {role==='student' && view==='prep'            && <PrepView />}
+      </main>
+      <footer className="mt-16 border-t border-slate-200 bg-white py-6 print-hidden" role="contentinfo">
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-400">
+          <p className="font-medium text-slate-500"><span className="font-bold text-slate-700">The IEP Journey</span> · Bilingual Edition · v2.0 · 2026</p>
+          <p>Catrina Wright · NLU/CPS Teacher Residency · SPE-587</p>
+          <p>
+            <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener" aria-label="CC BY-NC 4.0 License" className="hover:text-sky-600 transition-colors">CC BY-NC 4.0</a>
+            {' · '}
+            <a href="mailto:cwright.specialed@gmail.com" className="hover:text-sky-600 transition-colors">cwright.specialed@gmail.com</a>
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
