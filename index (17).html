@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<!--
+  IEP Jargon Tool
+  © 2026 Catrina Wright. Licensed under CC BY-NC 4.0.
+  https://creativecommons.org/licenses/by-nc/4.0/
+  Free to share and adapt for non-commercial purposes with attribution.
+  Commercial use prohibited without written permission.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>IEP Jargon Tool · Catrina Wright</title>
+<style>
+:root{
+  --navy:#1B2A4A;--gold:#C8952A;--parch:#F8F3E8;--white:#FFFFFF;
+  --body:#2C2C2C;--mid:#4A5568;--ltgold:#EDD690;--softgold:#F5E8C0;
+  --green:#166534;--red:#991B1B;--highlight:#FFE066;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--parch);color:var(--body);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--navy);padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.header-badge{background:var(--gold);color:var(--navy);font-family:Georgia,serif;font-weight:700;font-size:1.1rem;padding:.35rem .7rem;border-radius:6px;flex-shrink:0;}
+header h1{font-family:Georgia,serif;color:var(--white);font-size:1.35rem;line-height:1.3;}
+header p{color:var(--ltgold);font-size:.82rem;margin-top:.15rem;}
+
+/* ROLE SELECTOR */
+.role-section{background:var(--navy);padding:1rem 1.5rem 1.2rem;border-top:1px solid rgba(255,255,255,.1);}
+.role-section p{color:rgba(255,255,255,.75);font-size:.85rem;margin-bottom:.75rem;}
+.role-picks{display:flex;flex-wrap:wrap;gap:.5rem;}
+.role-btn{background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);border-radius:8px;padding:.45rem .85rem;font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:.4rem;}
+.role-btn:hover{border-color:var(--gold);color:var(--white);}
+.role-btn.active{background:var(--gold);border-color:var(--gold);color:var(--navy);}
+.role-btn .role-icon{font-size:1rem;}
+
+/* SCENARIO PANEL */
+.scenario-panel{background:var(--white);border-left:5px solid var(--gold);border-radius:var(--radius);padding:1.1rem 1.3rem;margin:1.2rem 0;box-shadow:var(--shadow);display:none;}
+.scenario-panel.visible{display:block;}
+.scenario-panel h3{font-family:Georgia,serif;color:var(--navy);font-size:1.05rem;margin-bottom:.6rem;}
+.scenario-list{list-style:none;padding:0;display:grid;gap:.55rem;}
+.scenario-list li{background:var(--parch);border-radius:7px;padding:.6rem .85rem;font-size:.88rem;line-height:1.6;color:var(--body);border-left:3px solid var(--gold);}
+.scenario-list li strong{color:var(--navy);display:block;margin-bottom:.15rem;font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;}
+.scenario-tip{background:var(--navy);color:var(--ltgold);border-radius:7px;padding:.65rem .9rem;font-size:.85rem;line-height:1.6;margin-top:.7rem;}
+.scenario-tip::before{content:"💡 ";font-size:.9rem;}
+
+/* TAB NAV */
+nav{background:var(--navy);border-top:1px solid rgba(255,255,255,.08);display:flex;overflow-x:auto;padding:0 1rem;gap:.25rem;}
+nav button{background:none;border:none;color:rgba(255,255,255,.6);font-size:.85rem;font-weight:600;padding:.7rem 1rem;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;font-family:inherit;}
+nav button:hover{color:var(--white);}
+nav button.active{color:var(--gold);border-bottom-color:var(--gold);}
+nav button.student-nav{color:var(--ltgold);}
+nav button.student-nav.active{color:var(--navy);background:var(--gold);border-radius:6px 6px 0 0;}
+
+/* MAIN */
+main{max-width:860px;margin:0 auto;padding:1.5rem 1rem;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* READ BAR */
+.read-bar{background:var(--navy);color:var(--white);border-radius:var(--radius);padding:.7rem 1.1rem;display:flex;align-items:center;gap:.75rem;margin-bottom:1.1rem;flex-wrap:wrap;}
+.read-bar span{font-size:.85rem;opacity:.8;flex:1;}
+.read-btn{background:var(--gold);color:var(--navy);border:none;border-radius:6px;padding:.4rem .85rem;font-weight:700;font-size:.85rem;cursor:pointer;font-family:inherit;transition:background .2s;}
+.read-btn:hover{background:var(--ltgold);}
+.read-btn.stop{background:var(--red);color:var(--white);}
+.ri{width:9px;height:9px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:pulse 1s infinite;display:none;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.reading-word{background:var(--highlight);color:var(--navy);border-radius:3px;padding:0 2px;}
+
+/* SECTION INTRO */
+.section-intro{background:var(--white);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.1rem;border-left:4px solid var(--gold);box-shadow:var(--shadow);}
+.section-intro h2{font-family:Georgia,serif;color:var(--navy);font-size:1.15rem;margin-bottom:.35rem;}
+.section-intro p{font-size:.88rem;color:var(--mid);line-height:1.6;}
+
+/* GLOSSARY CARDS */
+.term-grid{display:grid;gap:.9rem;}
+.term-card{background:var(--white);border-radius:var(--radius);padding:1rem 1.2rem;box-shadow:var(--shadow);border-top:3px solid var(--gold);}
+.term-card h3{font-family:Georgia,serif;color:var(--navy);font-size:1rem;margin-bottom:.25rem;}
+.tag{font-size:.7rem;font-weight:700;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.45rem;display:block;}
+.term-card p{font-size:.88rem;line-height:1.65;}
+.example{background:var(--parch);border-radius:6px;padding:.5rem .7rem;margin-top:.6rem;font-size:.83rem;color:var(--mid);line-height:1.6;}
+.example strong{color:var(--navy);}
+.card-read-btn{background:none;border:1px solid var(--gold);color:var(--gold);border-radius:5px;padding:.28rem .6rem;font-size:.76rem;font-weight:600;cursor:pointer;margin-top:.6rem;font-family:inherit;transition:all .2s;}
+.card-read-btn:hover{background:var(--gold);color:var(--navy);}
+.card-read-btn.reading{background:var(--red);color:var(--white);border-color:var(--red);}
+
+/* STUDENT CARDS */
+.student-grid{display:grid;gap:1rem;}
+@media(min-width:560px){.student-grid{grid-template-columns:1fr 1fr;}}
+.student-card{background:var(--white);border-radius:12px;padding:1.1rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.55rem;border-top:4px solid var(--gold);}
+.s-icon{width:50px;height:50px;background:var(--parch);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.s-icon svg{width:26px;height:26px;}
+.plain{font-size:.92rem;font-weight:700;color:var(--gold);margin-bottom:.1rem;}
+.student-card h3{font-family:Georgia,serif;color:var(--navy);font-size:1rem;}
+.student-card p{font-size:.9rem;line-height:1.65;}
+.s-example{background:var(--softgold);border-radius:8px;padding:.55rem .75rem;font-size:.86rem;color:var(--navy);line-height:1.6;}
+.s-example::before{content:"💬 ";}
+.svb{background:var(--navy);color:var(--white);border:none;border-radius:6px;padding:.38rem .75rem;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.35rem;transition:background .2s;}
+.svb:hover{background:var(--gold);color:var(--navy);}
+.svb.reading{background:var(--red);}
+.svb svg{width:13px;height:13px;}
+
+/* STUDENT BANNER */
+.student-banner{background:linear-gradient(135deg,var(--navy),#2E4270);color:var(--white);border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1.2rem;box-shadow:var(--shadow);}
+.student-banner h2{font-family:Georgia,serif;font-size:1.2rem;color:var(--gold);margin-bottom:.35rem;}
+.student-banner p{font-size:.9rem;line-height:1.65;color:rgba(255,255,255,.9);}
+.banner-rbt{background:var(--gold);color:var(--navy);border:none;border-radius:6px;padding:.4rem .85rem;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit;margin-top:.65rem;display:inline-block;}
+
+/* SCRIPTS */
+.script-card{background:var(--white);border-radius:var(--radius);padding:1rem 1.2rem;box-shadow:var(--shadow);margin-bottom:.9rem;border-left:4px solid var(--navy);}
+.script-card h3{color:var(--navy);font-size:.98rem;font-family:Georgia,serif;margin-bottom:.45rem;}
+.say{background:var(--navy);color:var(--white);border-radius:6px;padding:.55rem .85rem;font-size:.86rem;line-height:1.6;margin-bottom:.45rem;font-style:italic;}
+.script-card p{font-size:.83rem;color:var(--mid);line-height:1.6;}
+
+/* LEGAL / PREP */
+.legal-card{background:var(--navy);color:var(--white);border-radius:var(--radius);padding:1.1rem;margin-bottom:.9rem;box-shadow:var(--shadow);}
+.legal-card h3{font-family:Georgia,serif;color:var(--gold);font-size:1.05rem;margin-bottom:.45rem;}
+.legal-card p{font-size:.88rem;line-height:1.65;color:rgba(255,255,255,.88);}
+.legal-card .cite{font-size:.76rem;color:var(--ltgold);margin-top:.45rem;font-style:italic;}
+.prep-box{background:var(--white);border-radius:var(--radius);padding:1rem 1.2rem;box-shadow:var(--shadow);margin-bottom:.9rem;}
+.prep-box h3{font-family:Georgia,serif;color:var(--navy);font-size:.98rem;margin:0 0 .5rem;}
+.prep-box ul{padding-left:1.2rem;}
+.prep-box ul li{font-size:.88rem;line-height:1.7;color:var(--body);}
+.prep-box ul li::marker{color:var(--gold);}
+
+/* FOOTER */
+footer{text-align:center;padding:1.4rem 1rem;font-size:.76rem;color:var(--mid);border-top:1px solid #E0D8C8;margin-top:2rem;}
+footer a{color:var(--gold);text-decoration:none;}
+
+.sw{position:relative;margin-bottom:1.1rem;}
+.sw input{width:100%;padding:.7rem 1rem .7rem 2.6rem;border:2px solid #D6CBBA;border-radius:var(--radius);font-size:.92rem;font-family:inherit;background:var(--white);color:var(--body);outline:none;transition:border-color .2s;}
+.sw input:focus{border-color:var(--gold);}
+.s-ico{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--mid);font-size:1rem;pointer-events:none;}
+.s-clr{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mid);font-size:1rem;cursor:pointer;display:none;}
+.s-cnt{font-size:.78rem;color:var(--mid);margin-bottom:.6rem;margin-top:-.3rem;}
+.tc.hidden{display:none;}
+.no-res{background:var(--white);border-radius:var(--radius);padding:1.5rem;text-align:center;color:var(--mid);font-size:.9rem;box-shadow:var(--shadow);}
+.wts-btn{background:none;border:1.5px solid var(--gold);color:var(--gold);border-radius:6px;padding:.3rem .7rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:.65rem;display:inline-flex;align-items:center;gap:.35rem;transition:all .2s;}
+.wts-btn:hover{background:var(--gold);color:var(--navy);}
+.wts-btn.open{background:var(--navy);border-color:var(--navy);color:var(--white);}
+.wts-drawer{display:none;margin-top:.65rem;background:var(--navy);border-radius:8px;padding:.8rem 1rem;}
+.wts-drawer.open{display:block;}
+.wts-lbl{font-size:.72rem;font-weight:700;color:var(--ltgold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;}
+.wts-sc{font-style:italic;color:var(--white);font-size:.9rem;line-height:1.65;margin-bottom:.5rem;}
+.wts-nt{font-size:.8rem;color:var(--ltgold);line-height:1.6;}
+.wts-rb{background:var(--gold);color:var(--navy);border:none;border-radius:5px;padding:.3rem .65rem;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:.55rem;display:inline-flex;align-items:center;gap:.35rem;}
+.wts-rb:hover{background:var(--ltgold);}
+.wts-rb.reading{background:var(--red);color:var(--white);}
+
+.lang-toggle{display:flex;gap:.4rem;margin:.6rem 0 .9rem;}
+.lang-btn{background:none;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.75);border-radius:6px;padding:.3rem .75rem;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.lang-btn:hover{border-color:var(--gold);color:var(--white);}
+.lang-btn.active{background:var(--gold);border-color:var(--gold);color:var(--navy);}
+.sc-lang-toggle{display:flex;gap:.35rem;align-items:center;margin-left:auto;}
+.sc-lang-btn{background:none;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);border-radius:5px;padding:.2rem .6rem;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.sc-lang-btn:hover{border-color:var(--gold);color:var(--white);}
+.sc-lang-btn.active{background:var(--gold);border-color:var(--gold);color:var(--navy);}
+.es-note{font-size:.75rem;color:var(--ltgold);font-style:italic;margin:.35rem 0 .6rem;display:none;}
+.es-note.visible{display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">IEP</div>
+  <div>
+    <h1>IEP Jargon Tool</h1>
+    <p>Plain-language support for IEP meetings · Catrina Wright, Special Education · CC BY-NC 4.0</p>
+  </div>
+</header>
+
+<!-- ROLE SELECTOR -->
+<div class="role-section">
+  <p>Who are you? Select your role to see scenarios and tips tailored for you.</p>
+  <div class="role-picks">
+    <button class="role-btn" onclick="setRole('parent',this)"><span class="role-icon">👨‍👩‍👧</span> Parent / Guardian</button>
+    <button class="role-btn student-nav" onclick="setRole('student',this)"><span class="role-icon">🎓</span> Student</button>
+    <button class="role-btn" onclick="setRole('teacher',this)"><span class="role-icon">📚</span> Teacher</button>
+    <button class="role-btn" onclick="setRole('admin',this)"><span class="role-icon">🏫</span> Administrator</button>
+    <button class="role-btn" onclick="setRole('advocate',this)"><span class="role-icon">⚖️</span> Advocate</button>
+  </div>
+</div>
+
+<!-- SCENARIO PANELS -->
+<div style="max-width:860px;margin:0 auto;padding:0 1rem;">
+
+<div id="scenario-parent" class="scenario-panel">
+  <div class="sc-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+    <h3 style="font-family:Georgia,serif;color:var(--white);font-size:1rem;">&#128106;&#8203;&#128105;&#8203;&#128067; Parent / Guardian &mdash; Scenarios &amp; Scripts</h3>
+    <div class="sc-lang-toggle">
+      <button class="sc-lang-btn active" id="pl-en" onclick="setParentLang('en',this)">EN</button>
+      <button class="sc-lang-btn" id="pl-es" onclick="setParentLang('es',this)">ES &#127466;&#127480;</button>
+    </div>
+  </div>
+  <div class="es-note" id="parent-es-note">Mostrando escenarios en espa&#241;ol. Toque &#128172; para ver el gui&#243;n.</div>
+  <div class="sc-body" id="parent-sc-body"></div>
+  <div class="role-tip">You are an equal member of the IEP team. You are not a guest. You are never required to sign on the day of the meeting. Your signature means you attended &mdash; not that you agree.</div>
+</div>
+
+<div id="scenario-student" class="scenario-panel">
+  <h3>🎓 Scenarios for Students</h3>
+  <ul class="scenario-list">
+    <li><strong>Your First IEP Meeting</strong>You are invited to your IEP meeting but do not know what to say. Start with the Student Guide tab. Read each term and practice saying what you want out loud before the meeting.</li>
+    <li><strong>You Want to Change a Goal</strong>Your goal feels too easy or not connected to what you actually want to do after school. You can say: "I would like to talk about changing this goal because it is not what I am working toward."</li>
+    <li><strong>You Do Not Understand Something</strong>A teacher or staff member uses a word you do not recognize in your meeting. You can say: "Can you explain what that means in a simpler way?"</li>
+    <li><strong>Transition Planning</strong>Your team asks what you want to do after high school. Use the Transition Plan card in the Student Guide to prepare your answer before the meeting.</li>
+    <li><strong>You Want More Independence</strong>You feel like adults are making decisions for you without asking. Self-determination is your right. You can say: "I would like to lead part of this meeting and share my own goals."</li>
+  </ul>
+  <div class="scenario-tip">You have the legal right to be at your own IEP meeting. Your voice matters more than anyone else's in that room. The Student Guide tab was built for you.</div>
+</div>
+
+<div id="scenario-teacher" class="scenario-panel">
+  <h3>📚 Scenarios for Teachers</h3>
+  <ul class="scenario-list">
+    <li><strong>Family Cannot Follow the Meeting</strong>A parent looks confused but does not ask questions. Pause and say: "I want to make sure this is clear. Can I explain that in a different way?" Use this tool as a shared reference point on screen or printed.</li>
+    <li><strong>Writing Measurable Goals</strong>A goal is not specific enough to measure. Review the Annual Goals definition and the Endrew F. standard to ensure goals reflect meaningful growth beyond current performance.</li>
+    <li><strong>Explaining SDI to a Family</strong>A parent asks why their child is being pulled from the classroom. Use the Specially Designed Instruction and LRE definitions to explain the decision in plain language.</li>
+    <li><strong>Student is Not Making Progress</strong>You need to initiate a conversation about revising goals mid-year. Use the Prior Written Notice and IEP amendment script to frame the process correctly.</li>
+    <li><strong>Introducing a New Family to IEP Process</strong>A family is attending their first IEP meeting. Share the QR code for this tool before the meeting so they can review terms in advance.</li>
+  </ul>
+  <div class="scenario-tip">Sharing this tool with families before the meeting — not during — gives them time to build vocabulary and arrive as informed participants rather than passive recipients.</div>
+</div>
+
+<div id="scenario-admin" class="scenario-panel">
+  <h3>🏫 Scenarios for Administrators</h3>
+  <ul class="scenario-list">
+    <li><strong>Compliance Dispute</strong>A family alleges FAPE was denied because services were not implemented as written. Review the FAPE and Procedural Safeguards definitions to ensure your team can articulate the legal standard clearly.</li>
+    <li><strong>Parent Requests Due Process</strong>A parent files for due process. Review the Procedural Safeguards section and the Endrew F. standard — both will be central to the hearing.</li>
+    <li><strong>Staff Training Gaps</strong>Teachers are writing goals that reflect current performance rather than meaningful growth. Use this tool as a staff resource during IEP professional development, alongside the Endrew F. page.</li>
+    <li><strong>Transition Compliance</strong>A student approaching age 16 does not have a transition plan in their IEP. Review the Transition Plan and Postsecondary Goals definitions to ensure legal requirements are met.</li>
+    <li><strong>Family Engagement Barriers</strong>Families attend meetings but do not participate. Share the QR code for this tool in your IEP meeting invitation letters as a preparation resource.</li>
+  </ul>
+  <div class="scenario-tip">Under Endrew F. (2017), "more than de minimis" is no longer a sufficient legal standard. Programs must be appropriately ambitious. This applies to every student, at every level, in every placement.</div>
+</div>
+
+<div id="scenario-advocate" class="scenario-panel">
+  <h3>⚖️ Scenarios for Advocates</h3>
+  <ul class="scenario-list">
+    <li><strong>Preparing a Family Before a Meeting</strong>Use the Glossary tab and role-based scenarios to walk a family through the key terms and phrases they will need. Focus on FAPE, LRE, Prior Written Notice, and Endrew F.</li>
+    <li><strong>Disputing an Inadequate IEP</strong>Goals reflect current performance with no expectation of growth. Cite the Endrew F. standard directly: programs must be appropriately ambitious. Document the specific goals that fail to meet this standard.</li>
+    <li><strong>Requesting an IEE</strong>The school's evaluation does not reflect the student's actual profile. Use the script for "Requesting an independent evaluation" and submit the request in writing.</li>
+    <li><strong>Parent Was Not Meaningfully Informed</strong>A parent signed an IEP without understanding it. Review the Procedural Safeguards section — informed consent requires that the parent genuinely understood what they were agreeing to.</li>
+    <li><strong>Placement Is More Restrictive Than Necessary</strong>A student is in a separate classroom with no general education exposure. Use the LRE definition and the Endrew F. standard to frame the argument for a less restrictive placement.</li>
+  </ul>
+  <div class="scenario-tip">Prior Written Notice is one of the most underused procedural tools available to families. Every time a school refuses to act on a parent's request, a PWN is required. No PWN means no documented basis for the refusal — that is a procedural violation.</div>
+</div>
+
+</div><!-- end scenario container -->
+
+<!-- TAB NAV -->
+<nav id="main-nav">
+  <button class="active" onclick="showTab('glossary',this)">📖 Glossary</button>
+  <button class="student-nav" onclick="showTab('student',this)">🎓 Student Guide</button>
+    <button onclick="showTab('endrew',this)">⚖️ Endrew F.</button>
+  <button onclick="showTab('prep',this)">📋 Parent Prep</button>
+</nav>
+
+<main>
+
+<!-- GLOSSARY -->
+<div id="tab-glossary" class="tab-panel active">
+  <div class="read-bar">
+    <div class="ri" id="ri-glossary"></div>
+    <span>Read the full glossary aloud</span>
+    <button class="read-btn" id="rb-glossary" onclick="readSection('glossary')">▶ Read All</button>
+  </div>
+  <div class="sw">
+    <span class="s-ico">🔍</span>
+    <input type="text" id="g-search" placeholder="Search terms, categories, or keywords…" oninput="filterGlossary(this.value)" autocomplete="off"/>
+    <button class="s-clr" id="s-clr" onclick="clearSearch()">✕</button>
+  </div>
+  <div class="s-cnt" id="s-cnt"></div>
+  <div class="no-res" id="no-res" style="display:none;">No terms match your search. Try a different keyword.</div>
+  <div class="section-intro">
+    <h2>IEP Glossary</h2>
+    <p>21 terms from IEP documents, translated into plain language. Every term includes a definition and a real-world example.</p>
+  </div>
+  <div class="term-grid" id="glossary-terms"></div>
+</div>
+
+<!-- STUDENT GUIDE -->
+<div id="tab-student" class="tab-panel">
+  <div class="student-banner" id="student-banner-text">
+    <h2 id="sb-title">Your IEP &#8212; Your Voice</h2>
+    <p id="sb-desc">Your IEP is your plan. You have the right to be part of every meeting. This guide explains the most important words so you know what is happening and what to say.</p>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:.6rem;margin-top:.65rem;">
+      <button class="banner-rbt" id="sb-read-btn" onclick="readStudentBanner(this)">&#9654; Read This</button>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="sl-en" onclick="setStudentLang('en',this)">EN</button>
+        <button class="lang-btn" id="sl-es" onclick="setStudentLang('es',this)">ES &#127466;&#127480;</button>
+      </div>
+    </div>
+  </div>
+  <div class="student-grid" id="student-terms"></div>
+</div>
+
+<!-- ENDREW F -->
+<div id="tab-endrew" class="tab-panel">
+  <div class="read-bar">
+    <div class="ri" id="ri-endrew"></div>
+    <span>Read this page aloud</span>
+    <button class="read-btn" id="rb-endrew" onclick="readSection('endrew')">▶ Read All</button>
+  </div>
+  <div id="endrew-content"></div>
+</div>
+
+<!-- PARENT PREP -->
+<div id="tab-prep" class="tab-panel">
+  <div class="read-bar">
+    <div class="ri" id="ri-prep"></div>
+    <span>Read this page aloud</span>
+    <button class="read-btn" id="rb-prep" onclick="readSection('prep')">▶ Read All</button>
+  </div>
+  <div id="prep-content"></div>
+</div>
+
+</main>
+
+<footer>
+  <p>© 2026 <strong>Catrina Wright</strong> · IEP Jargon Tool ·
+  <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a> ·
+  Free to share and adapt for non-commercial purposes with attribution ·
+  <a href="https://catrinawright.github.io/iep-jargon-tool/" target="_blank">catrinawright.github.io/iep-jargon-tool</a> ·
+  <a href="disclaimer.html">Legal Disclaimer</a></p>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+
+const GLOSSARY_TERMS = [
+  {term:"IEP (Individualized Education Program)",tag:"Core Document",def:"A legal document created for a student with a disability that outlines their current performance, annual goals, services, and placement. It is revised at least once per year and requires the signature of the parent or guardian.",ex:"The IEP team meets each spring to review whether the student met their annual goals and to write new ones for the coming school year."},
+  {term:"Present Levels of Academic Achievement and Functional Performance (PLAAFP)",tag:"Assessment",def:"A section of the IEP that describes where the student is right now — academically, behaviorally, and functionally — based on current data. Everything else in the IEP is built from this foundation.",ex:"The PLAAFP states that the student reads at a 4th-grade level and requires verbal prompts to initiate tasks independently."},
+  {term:"Annual Goals",tag:"Goals",def:"Measurable statements in the IEP that describe what the student is expected to achieve within one year. Goals must be specific, measurable, and connected to the student's present levels.",ex:"By May 2026, the student will correctly identify correct change on a simulated purchase with 80% accuracy across 4 out of 5 trials."},
+  {term:"Short-Term Objectives",tag:"Goals",def:"Smaller, incremental steps that lead toward the annual goal. Required for students who take alternate assessments; may be included for other students as appropriate.",ex:"By January, the student will identify coins by name with 90% accuracy as a step toward the money-management annual goal."},
+  {term:"Least Restrictive Environment (LRE)",tag:"Placement",def:"The legal requirement under IDEA that students with disabilities be educated alongside non-disabled peers to the maximum extent appropriate. Removal from general education must be justified.",ex:"The team determined that the student's LRE is a general education classroom with pull-out support for 30 minutes daily."},
+  {term:"Free Appropriate Public Education (FAPE)",tag:"Legal Right",def:"The right guaranteed under IDEA for students with disabilities to receive special education and related services at no cost to the family, tailored to meet their unique needs.",ex:"If the school fails to implement the IEP as written, the family may file a complaint on the grounds that FAPE has been denied."},
+  {term:"Related Services",tag:"Services",def:"Supplementary services required to help a student benefit from special education, including speech-language therapy, occupational therapy, physical therapy, counseling, and transportation.",ex:"The student's IEP includes occupational therapy twice per week as a related service to address fine motor skill development."},
+  {term:"Accommodations",tag:"Supports",def:"Changes to how a student is taught or tested that do not alter the content or difficulty of what is being learned. Accommodations level the playing field without changing the standard.",ex:"Extended time on assessments and preferential seating are accommodations listed in the student's IEP."},
+  {term:"Modifications",tag:"Supports",def:"Changes to what a student is expected to learn or demonstrate, typically reducing the complexity or amount of content. Modifications change the standard itself.",ex:"The student's coursework is modified so that they are assessed on the core vocabulary of a unit rather than the full curriculum."},
+  {term:"Transition Plan",tag:"Transition",def:"A component of the IEP required by age 16 that outlines postsecondary goals for education, employment, and independent living, along with the services and activities needed to achieve them.",ex:"The transition plan identifies that the student plans to enroll in a vocational training program and includes job-shadowing experiences as a transition activity."},
+  {term:"Self-Determination",tag:"Student Rights",def:"A student's ability to make choices about their own life — including participating in IEP meetings, setting their own goals, and advocating for their own needs. Schools are required to invite students to their IEP meetings when transition planning begins.",ex:"The student demonstrated self-determination by leading the opening of their own IEP meeting, sharing their preferred learning environment and career interests."},
+  {term:"Prior Written Notice (PWN)",tag:"Procedural Safeguard",def:"A written document the school must give parents before making any change — or refusing to make a change — to a student's identification, evaluation, or placement. It must explain the decision and the reasons behind it.",ex:"The school provided a PWN explaining why they declined the parent's request for a one-to-one paraprofessional."},
+  {term:"Procedural Safeguards",tag:"Legal Rights",def:"A set of legal rights and protections guaranteed to parents and students under IDEA, including the right to consent, inspect records, dispute decisions, and request mediation or due process.",ex:"The parent reviewed the procedural safeguards notice and requested an independent educational evaluation at no cost."},
+  {term:"Functional Behavioral Assessment (FBA)",tag:"Behavior",def:"A structured process for identifying the function or purpose of a student's behavior — what the student is getting or avoiding through the behavior — in order to develop an effective support plan.",ex:"The FBA revealed that the student's task-refusal behavior was maintained by escape from non-preferred academic tasks."},
+  {term:"Behavior Intervention Plan (BIP)",tag:"Behavior",def:"A written plan developed from FBA data that outlines strategies for preventing problem behavior, teaching replacement behaviors, and responding to incidents when they occur.",ex:"The BIP specifies that when the student becomes dysregulated, staff will offer a structured break before re-engaging with the task."},
+  {term:"Extended School Year (ESY)",tag:"Services",def:"Special education services provided beyond the regular school year for students who would experience significant regression of skills during breaks and require an extended period to recoup those skills.",ex:"The team determined that the student qualifies for ESY services in summer to maintain communication and daily living skills."},
+  {term:"Specially Designed Instruction (SDI)",tag:"Instruction",def:"Instruction that is specifically adapted to meet the unique needs of a student with a disability — including changes to content, methodology, or delivery — to help the student access the general curriculum.",ex:"The teacher used visual supports and task analysis as SDI strategies to help the student complete multi-step vocational tasks."},
+  {term:"Assistive Technology (AT)",tag:"Tools",def:"Any device, tool, or software that helps a student with a disability do something they could not otherwise do independently — from low-tech picture cards to high-tech speech-generating devices.",ex:"The student's IEP includes a speech-generating device as an AT support for expressive communication during academic activities."},
+  {term:"Augmentative and Alternative Communication (AAC)",tag:"Communication",def:"Any method — other than speech — that a person uses to communicate, including gestures, picture boards, communication apps, and speech-generating devices.",ex:"The student uses a picture exchange system as their primary AAC method and is being introduced to a high-tech communication device."},
+  {term:"Postsecondary Goals",tag:"Transition",def:"Measurable goals in the transition section of the IEP that describe what the student intends to do after leaving high school — specifically in the areas of education or training, employment, and where applicable, independent living.",ex:"The student's postsecondary goals include enrollment in a community college culinary program and competitive employment in the food service industry."},
+  {term:"Endrew F. Standard",tag:"Legal Standard",def:"The 2017 U.S. Supreme Court ruling that raised the legal standard for IEP quality. Schools must offer programs that are 'appropriately ambitious' — not merely more than minimal. Goals must be meaningfully challenging given the student's circumstances.",ex:"A parent cited the Endrew F. standard when disputing a goal that matched the student's current performance level without any expectation of growth."}
+];
+
+const STUDENT_TERMS = [
+  {term:"IEP",plain:"Your Special School Plan",def:"IEP means Individualized Education Program. It is your plan. It says what help you get at school and what you will learn this year.",example:"Your IEP might say you get extra time on tests or that a teacher works with you one-on-one.",icon:`<svg viewBox="0 0 28 28" fill="none"><rect x="4" y="2" width="20" height="24" rx="3" fill="#1B2A4A"/><rect x="7" y="8" width="14" height="2" rx="1" fill="#C8952A"/><rect x="7" y="12" width="10" height="2" rx="1" fill="#EDD690"/><rect x="7" y="16" width="12" height="2" rx="1" fill="#EDD690"/><rect x="7" y="20" width="8" height="2" rx="1" fill="#EDD690"/></svg>`},
+  {term:"Annual Goals",plain:"What You Will Learn This Year",def:"Annual goals are the things your team wants you to learn or do by the end of the school year. You help pick them. They should feel like a real challenge.",example:"A goal might say: By May, you will count money to make change at a store 8 out of 10 times.",icon:`<svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="#1B2A4A" stroke-width="2.5"/><circle cx="14" cy="14" r="6" stroke="#C8952A" stroke-width="2"/><circle cx="14" cy="14" r="2.5" fill="#C8952A"/></svg>`},
+  {term:"Present Levels",plain:"How You Are Doing Right Now",def:"Present levels tell your team what you can do right now. It is like a snapshot of where you are before you start working on new goals.",example:"Present levels might say: Right now, you can read 50 sight words and count to 100.",icon:`<svg viewBox="0 0 28 28" fill="none"><rect x="3" y="18" width="4" height="8" rx="1" fill="#C8952A"/><rect x="9" y="12" width="4" height="14" rx="1" fill="#1B2A4A"/><rect x="15" y="7" width="4" height="19" rx="1" fill="#C8952A"/><rect x="21" y="3" width="4" height="23" rx="1" fill="#1B2A4A"/></svg>`},
+  {term:"Transition Plan",plain:"Your Plan for After School",def:"A transition plan is your roadmap for life after school. It helps you think about what job you want, where you want to live, and what school or training comes next.",example:"Your plan might say you want to work at a restaurant and will take a cooking class to get ready.",icon:`<svg viewBox="0 0 28 28" fill="none"><path d="M4 22 L14 6 L24 22" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="6" r="2.5" fill="#C8952A"/><circle cx="24" cy="22" r="2.5" fill="#C8952A"/></svg>`},
+  {term:"Least Restrictive Environment",plain:"Where You Learn Best",def:"This means you should learn with all students as much as possible. Your school can only move you to a separate class if they can show it helps you more.",example:"If you can learn math in the regular classroom with some help, your school should keep you there.",icon:`<svg viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="3" fill="#1B2A4A"/><path d="M9 8 V5 Q14 2 19 5 V8" stroke="#C8952A" stroke-width="2" fill="none"/><circle cx="14" cy="16" r="4" fill="#C8952A"/></svg>`},
+  {term:"Related Services",plain:"Extra Help You Get at School",def:"Related services are extra supports that help you learn. Things like speech therapy, occupational therapy, or counseling are related services.",example:"You might go to speech therapy two times a week. That is a related service.",icon:`<svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="10" r="6" fill="#1B2A4A"/><path d="M14 16 Q8 20 6 26 H22 Q20 20 14 16Z" fill="#C8952A"/></svg>`},
+  {term:"Accommodations",plain:"Changes That Help You Learn",def:"Accommodations are changes that make it easier for you to show what you know. They do not make the work simpler. They just give you a fair chance.",example:"Getting extra time on a test is an accommodation. So is taking a test in a quiet room.",icon:`<svg viewBox="0 0 28 28" fill="none"><rect x="5" y="5" width="18" height="18" rx="4" stroke="#1B2A4A" stroke-width="2.5"/><path d="M9 14 L12 17 L19 11" stroke="#C8952A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`},
+  {term:"Self-Determination",plain:"You Get to Make Choices",def:"Self-determination means you have the power to make decisions about your own life. You get to say what you want, what you are good at, and what kind of help you need.",example:"At your IEP meeting you can say: I learn best when I can move around. Or: I want to work with animals after school.",icon:`<svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="8" r="5" fill="#C8952A"/><path d="M7 26 C7 19 21 19 21 26" fill="#1B2A4A"/><path d="M14 13 L14 20 M10 17 L18 17" stroke="#EDD690" stroke-width="2" stroke-linecap="round"/></svg>`},
+  {term:"IEP Meeting",plain:"Your Team Meeting",def:"Your IEP meeting is where your team comes together to talk about your plan. Your team includes you, your parent or guardian, your teachers, and school staff.",example:"At your IEP meeting you can share what is going well, what is hard, and what you want to learn next year.",icon:`<svg viewBox="0 0 28 28" fill="none"><circle cx="8" cy="9" r="4" fill="#1B2A4A"/><circle cx="20" cy="9" r="4" fill="#1B2A4A"/><circle cx="14" cy="7" r="4" fill="#C8952A"/><path d="M2 24 C2 18 14 18 14 24" fill="#1B2A4A"/><path d="M14 24 C14 18 26 18 26 24" fill="#1B2A4A"/></svg>`},
+  {term:"Postsecondary Goals",plain:"Your Dreams for the Future",def:"Postsecondary goals are your plans for after you finish school. They talk about work, more school or training, and how you want to live.",example:"Your postsecondary goals might say: I want to get a job at a bakery and live in an apartment with a roommate.",icon:`<svg viewBox="0 0 28 28" fill="none"><polygon points="14,3 17,10 25,10 19,15 21,23 14,18 7,23 9,15 3,10 11,10" fill="#C8952A"/></svg>`},
+  {term:"Advocate",plain:"Someone Who Speaks Up for You",def:"An advocate is a person who helps make sure your rights are respected. You can be your own advocate. You can also ask a parent, teacher, or trusted adult to advocate for you.",example:"If you do not understand something at your IEP meeting you can say: Can you explain that in a different way? That is self-advocacy.",icon:`<svg viewBox="0 0 28 28" fill="none"><path d="M5 22 L5 10 Q5 5 10 5 L22 5 Q26 5 26 10 L26 17 Q26 21 22 21 L12 21 Z" fill="#1B2A4A"/><circle cx="10" cy="13" r="1.5" fill="#EDD690"/><circle cx="14" cy="13" r="1.5" fill="#EDD690"/><circle cx="18" cy="13" r="1.5" fill="#EDD690"/></svg>`}
+];
+
+const ACTION_SCRIPTS = [
+  {title:"I don't understand a word or phrase",say:'"Can you explain what [word] means in plain language?"'},
+  {title:"I disagree with a goal",say:'"I would like to discuss this goal. My concern is that it doesn\'t reflect what my child is actually working toward. Can we revisit it?"',note:"You have the right to disagree. The school cannot finalize the IEP without your input."},
+  {title:"I want to request an evaluation",say:'"I am formally requesting a full and individual evaluation for my child in the area of [reading / behavior / communication / other]."',note:"Submit this in writing. The school has a set number of days to respond."},
+  {title:"I want to dispute a placement decision",say:'"I do not agree that this placement meets my child\'s LRE requirement. I am requesting a meeting to discuss less restrictive options."'},
+  {title:"I want to invoke my procedural safeguards",say:'"I would like a copy of the procedural safeguards notice and time to review it before I sign anything."'},
+  {title:"I feel rushed to sign the IEP",say:'"I am not ready to sign today. I would like to take the document home and review it. Can we schedule a follow-up?"',note:"You are never required to sign the IEP on the day of the meeting."},
+  {title:"The school is not implementing the IEP",say:'"I have noticed that [specific service or accommodation] is not being provided as written in the IEP. I am requesting written confirmation of how and when this will be corrected."'},
+  {title:"I want to record the meeting",say:'"I would like to audio-record this meeting. I am notifying the team now."',note:"Check your state and district policy before recording."},
+  {title:"Citing the Endrew F. standard",say:'"Under Endrew F. v. Douglas County (2017), my child\'s IEP must be appropriately ambitious. I believe the current goals do not meet that standard and I am requesting they be revised."'},
+  {title:"I want to request an IEP amendment",say:'"I am requesting an amendment to the IEP to change [goal / service / placement]. I would like this in writing."'},
+  {title:"I want to request mediation",say:'"I would like to request mediation through the state board of education to resolve our disagreement about [specific issue]."'},
+  {title:"Requesting an independent evaluation",say:'"I disagree with the school\'s evaluation. I am requesting an Independent Educational Evaluation at no cost to me, as is my right under IDEA."'}
+];
+
+const ENDREW_HTML = `
+  <div class="legal-card">
+    <h3>Endrew F. v. Douglas County School District (2017)</h3>
+    <p>In 2017, the United States Supreme Court unanimously ruled that the legal standard for IEP quality is higher than previously applied. Schools must offer programs that are "appropriately ambitious" — not merely more than minimal progress.</p>
+    <p class="cite">Endrew F. v. Douglas County School District Re-1, 580 U.S. 386 (2017)</p>
+  </div>
+  <div class="prep-box">
+    <h3>What the Court Said</h3>
+    <ul>
+      <li>The IEP must be reasonably calculated to enable a child to make progress appropriate in light of the child's circumstances.</li>
+      <li>For students in general education, this typically means progress toward grade-level standards.</li>
+      <li>For students in alternative settings, the standard is still "appropriately ambitious" — goals must be meaningfully challenging.</li>
+      <li>A program offering only de minimis progress does not meet this standard.</li>
+    </ul>
+  </div>
+  <div class="prep-box">
+    <h3>How to Use This Standard</h3>
+    <ul>
+      <li>Compare each proposed goal to the present levels. If the goal reflects where your child already is, it is not appropriately ambitious.</li>
+      <li>Ask the team: "How was this goal calibrated to be challenging given where my child currently performs?"</li>
+      <li>Request data showing the basis for each goal's level of challenge.</li>
+      <li>Document your objection in writing if you believe goals fail to meet the Endrew F. standard.</li>
+    </ul>
+  </div>
+`;
+
+const PREP_HTML = `
+  <div class="section-intro"><h2>Parent IEP Prep Sheet</h2><p>Use this checklist before, during, and after every IEP meeting.</p></div>
+  <div class="prep-box"><h3>Before the Meeting</h3><ul>
+    <li>Request a draft copy of the IEP at least 3 days before the meeting.</li>
+    <li>Review the present levels — do they accurately reflect your child's current performance?</li>
+    <li>Write down at least 3 things you want to make sure are discussed.</li>
+    <li>If your child is 14 or older, talk with them about what they want to say at the meeting.</li>
+    <li>Bring copies of any outside evaluations, medical documentation, or school records.</li>
+    <li>Confirm who will be at the meeting and whether all required team members are present.</li>
+  </ul></div>
+  <div class="prep-box"><h3>During the Meeting</h3><ul>
+    <li>Ask for plain-language explanations of any term you don't understand.</li>
+    <li>Ask how each proposed goal is more challenging than where your child is right now.</li>
+    <li>Ask for data — how will the team measure progress on each goal?</li>
+    <li>Ask whether all related services are listed with specific minutes per week.</li>
+    <li>Do not feel pressured to sign on the day of the meeting.</li>
+    <li>If you disagree, say so clearly and ask for your disagreement to be noted in the record.</li>
+  </ul></div>
+  <div class="prep-box"><h3>After the Meeting</h3><ul>
+    <li>Keep a signed copy of the IEP in a safe place.</li>
+    <li>Note the start dates for all services — follow up if they don't begin on time.</li>
+    <li>Send a follow-up email summarizing any verbal agreements made at the meeting.</li>
+    <li>Request progress reports on each goal at regular intervals.</li>
+    <li>If you have unresolved concerns, contact the special education coordinator and document the conversation.</li>
+  </ul></div>
+`;
+
+// ══════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════
+
+function renderGlossary(){
+  document.getElementById('glossary-terms').innerHTML = GLOSSARY_TERMS.map((t,i)=>`
+    <div class="term-card">
+      <span class="tag">${t.tag}</span>
+      <h3>${t.term}</h3>
+      <p id="gd${i}" class="readable">${t.def}</p>
+      <div class="example"><strong>Example:</strong> <span id="ge${i}">${t.ex}</span></div>
+      <button class="card-read-btn" id="grb${i}" onclick="readCard('gd${i}','ge${i}','grb${i}')">▶ Read</button>
+    </div>`).join('');
+}
+
+function renderStudent(){
+  const terms = studentLang === 'es' ? STUDENT_TERMS_ES : STUDENT_TERMS;
+  const readLabel = studentLang === 'es' ? 'Léeme' : 'Read to me';
+  document.getElementById('student-terms').innerHTML = terms.map((t,i)=>`
+    <div class="student-card">
+      <div class="s-icon">${t.icon}</div>
+      <div style="width:100%">
+        <div class="plain">${t.plain}</div>
+        <h3>${t.term}</h3>
+        <p id="sd${i}" class="readable">${t.def}</p>
+        <div class="s-example" id="se${i}">${t.example}</div>
+        <button class="svb" id="svb${i}" onclick="readCard('sd${i}','se${i}','svb${i}')">
+          <svg viewBox="0 0 14 14" fill="none"><polygon points="2,2 12,7 2,12" fill="currentColor"/></svg>
+          ${readLabel}
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+
+function filterGlossary(q){
+  const v = q.trim().toLowerCase();
+  const cards = document.querySelectorAll('.tc');
+  const clr = document.getElementById('s-clr');
+  const cnt = document.getElementById('s-cnt');
+  const noRes = document.getElementById('no-res');
+  clr.style.display = v ? 'block' : 'none';
+  let vis = 0;
+  cards.forEach(card => {
+    const match = !v || card.dataset.term.includes(v) || card.dataset.tag.includes(v) || card.dataset.def.includes(v);
+    card.classList.toggle('hidden', !match);
+    if(match) vis++;
+  });
+  cnt.textContent = v ? `${vis} of ${cards.length} terms match "${q}"` : '';
+  noRes.style.display = (v && vis === 0) ? 'block' : 'none';
+}
+
+function clearSearch(){
+  document.getElementById('g-search').value = '';
+  filterGlossary('');
+  document.getElementById('g-search').focus();
+}
+
+function renderScripts(){
+  document.getElementById('scripts-content').innerHTML = ACTION_SCRIPTS.map((s,i)=>`
+    <div class="script-card">
+      <h3>${s.title}</h3>
+      <div class="say" id="say${i}">${s.say}</div>
+      ${s.note?`<p>${s.note}</p>`:''}
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// ROLE SELECTOR
+// ══════════════════════════════════════════════════════════
+
+let activeRole = null;
+function setRole(role, btn){
+  // Toggle off if same role clicked again
+  if(activeRole === role){
+    document.querySelectorAll('.scenario-panel').forEach(p=>p.classList.remove('visible'));
+    document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+    activeRole = null;
+    return;
+  }
+  document.querySelectorAll('.scenario-panel').forEach(p=>p.classList.remove('visible'));
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('scenario-'+role).classList.add('visible');
+  btn.classList.add('active');
+  activeRole = role;
+  // Scroll to scenario
+  document.getElementById('scenario-'+role).scrollIntoView({behavior:'smooth',block:'nearest'});
+  // If student role, auto-switch to student tab
+  if(role === 'student'){
+    const studentBtn = document.querySelector('nav button.student-nav');
+    showTab('student', studentBtn);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════
+
+function showTab(name, btn){
+  stopReading();
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════
+// SPEECH + WORD HIGHLIGHTING
+// ══════════════════════════════════════════════════════════
+
+let wordSpans=[];
+
+function stopReading(){
+  window.speechSynthesis.cancel();
+  clearHighlights();
+  document.querySelectorAll('.read-btn').forEach(b=>{b.textContent='▶ Read All';b.classList.remove('stop');});
+  document.querySelectorAll('.card-read-btn').forEach(b=>{b.textContent='▶ Read';b.classList.remove('reading');});
+  document.querySelectorAll('.svb').forEach(b=>{b.innerHTML='<svg viewBox="0 0 14 14" fill="none"><polygon points="2,2 12,7 2,12" fill="currentColor"/></svg> Read to me';b.classList.remove('reading');});
+  document.querySelectorAll('.ri').forEach(r=>r.style.display='none');
+}
+
+function clearHighlights(){
+  wordSpans.forEach(info=>{if(info.el&&info.original!==undefined)info.el.innerHTML=info.original;});
+  wordSpans=[];
+}
+
+function wrapWords(el){
+  const original=el.innerHTML;
+  const text=el.textContent;
+  el.innerHTML=text.replace(/(\S+)/g,(w,_,o)=>`<span class="w" data-ci="${o}">${w}</span>`);
+  return{el,original,text};
+}
+
+function highlightWord(el,ci){
+  el.querySelectorAll('span.w').forEach(s=>s.classList.remove('reading-word'));
+  let best=null,bd=Infinity;
+  el.querySelectorAll('span.w').forEach(s=>{const d=Math.abs(parseInt(s.getAttribute('data-ci'))-ci);if(d<bd){bd=d;best=s;}});
+  if(best)best.classList.add('reading-word');
+}
+
+function readCard(defId,exId,btnId){
+  const btn=document.getElementById(btnId);
+  if(window.speechSynthesis.speaking){stopReading();return;}
+  btn.classList.add('reading');
+  const isSvb=btn.classList.contains('svb');
+  btn.innerHTML=isSvb?'<svg viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="4" height="10" fill="currentColor"/><rect x="8" y="2" width="4" height="10" fill="currentColor"/></svg> Stop':'■ Stop';
+
+  const defEl=document.getElementById(defId),exEl=document.getElementById(exId);
+  const i1=wrapWords(defEl),i2=wrapWords(exEl);
+  wordSpans.push(i1,i2);
+  const t1=i1.text,t2=i2.text,full=t1+' '+t2,len1=t1.length+1;
+
+  const utt=new SpeechSynthesisUtterance(full);
+  utt.rate=0.88;
+  utt.lang = (document.getElementById('tab-student')&&document.getElementById('tab-student').classList.contains('active')&&studentLang==='es') ? 'es-US' : 'en-US';
+  utt.onboundary=(e)=>{
+    if(e.name!=='word')return;
+    if(e.charIndex<len1){highlightWord(defEl,e.charIndex);exEl.querySelectorAll('span.w').forEach(s=>s.classList.remove('reading-word'));}
+    else{highlightWord(exEl,e.charIndex-len1);defEl.querySelectorAll('span.w').forEach(s=>s.classList.remove('reading-word'));}
+  };
+  utt.onend=utt.onerror=()=>{
+    clearHighlights();btn.classList.remove('reading');
+    btn.innerHTML=isSvb?'<svg viewBox="0 0 14 14" fill="none"><polygon points="2,2 12,7 2,12" fill="currentColor"/></svg> Read to me':'▶ Read';
+  };
+  window.speechSynthesis.speak(utt);
+}
+
+function readElement(id,btn){
+  if(window.speechSynthesis.speaking){stopReading();btn.textContent='▶ Read This';return;}
+  const el=document.getElementById(id);
+  btn.textContent='■ Stop';
+  const info=wrapWords(el);wordSpans.push(info);
+  const utt=new SpeechSynthesisUtterance(info.text);
+  utt.rate=0.88;
+  utt.onboundary=(e)=>{if(e.name==='word')highlightWord(el,e.charIndex);};
+  utt.onend=utt.onerror=()=>{clearHighlights();btn.textContent='▶ Read This';};
+  window.speechSynthesis.speak(utt);
+}
+
+function readSection(section){
+  const btn=document.getElementById('rb-'+section),ri=document.getElementById('ri-'+section);
+  if(window.speechSynthesis.speaking){stopReading();btn.textContent='▶ Read All';btn.classList.remove('stop');if(ri)ri.style.display='none';return;}
+  btn.textContent='■ Stop';btn.classList.add('stop');if(ri)ri.style.display='inline-block';
+
+  const panel=document.getElementById('tab-'+section);
+  const els=panel.querySelectorAll('h2,h3,p.readable,.say,li');
+  let chunks=[];
+  els.forEach(el=>{const t=el.textContent.trim();if(t.length>3)chunks.push({el,text:t});});
+  if(!chunks.length){stopReading();return;}
+
+  chunks.forEach(c=>wordSpans.push(wrapWords(c.el)));
+  const full=chunks.map(c=>c.text).join(' ');
+  let offsets=[],pos=0;
+  chunks.forEach(c=>{offsets.push({el:c.el,start:pos,end:pos+c.text.length});pos+=c.text.length+1;});
+
+  const utt=new SpeechSynthesisUtterance(full);
+  utt.rate=0.88;
+  utt.onboundary=(e)=>{
+    if(e.name!=='word')return;
+    const chunk=offsets.find(o=>e.charIndex>=o.start&&e.charIndex<=o.end);
+    if(!chunk)return;
+    offsets.forEach(o=>o.el.querySelectorAll('span.w').forEach(s=>s.classList.remove('reading-word')));
+    highlightWord(chunk.el,e.charIndex-chunk.start);
+  };
+  utt.onend=utt.onerror=()=>{clearHighlights();btn.textContent='▶ Read All';btn.classList.remove('stop');if(ri)ri.style.display='none';};
+  window.speechSynthesis.speak(utt);
+}
+
+function toggleScript(role, i){
+  const btn = document.getElementById('wts-btn-'+role+'-'+i);
+  const drawer = document.getElementById('wts-drawer-'+role+'-'+i);
+  const isOpen = drawer.classList.contains('open');
+  document.querySelectorAll('#scenario-'+role+' .wts-drawer').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('#scenario-'+role+' .wts-btn').forEach(b=>{b.classList.remove('open');b.innerHTML='&#x1F4AC; What to say';});
+  if(!isOpen){
+    drawer.classList.add('open');
+    btn.classList.add('open');
+    btn.textContent = '\u2715 Close';
+    drawer.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+function readScript(role, i){
+  const rb = document.getElementById('wts-rb-'+role+'-'+i);
+  const scEl = document.getElementById('wts-sc-'+role+'-'+i);
+  const ntEl = document.getElementById('wts-nt-'+role+'-'+i);
+  if(window.speechSynthesis.speaking){ stopReading(); return; }
+  rb.classList.add('reading'); rb.textContent = '\u25a0 Stop';
+  const i1 = wrapWords(scEl); wordSpans.push(i1);
+  let full = i1.text, l1 = i1.text.length + 1;
+  if(ntEl){ const i2 = wrapWords(ntEl); wordSpans.push(i2); full += ' ' + i2.text; }
+  const utt = new SpeechSynthesisUtterance(full);
+  utt.rate = 0.88;
+  utt.lang = (role==='parent' && parentLang==='es') ? 'es-US' : 'en-US';
+  utt.onboundary = function(e){
+    if(e.name !== 'word') return;
+    if(e.charIndex < l1){
+      highlightWord(scEl, e.charIndex);
+      if(ntEl) ntEl.querySelectorAll('span.w').forEach(function(s){s.classList.remove('reading-word');});
+    } else if(ntEl){
+      highlightWord(ntEl, e.charIndex - l1);
+      scEl.querySelectorAll('span.w').forEach(function(s){s.classList.remove('reading-word');});
+    }
+  };
+  utt.onend = utt.onerror = function(){ clearHighlights(); rb.classList.remove('reading'); rb.textContent = '\u25b6 Read aloud'; };
+  window.speechSynthesis.speak(utt);
+}
+
+// ══════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════
+// SPANISH DATA
+// ══════════════════════════════════════════════════════════
+
+const STUDENT_TERMS_ES = [
+  {term:"Plan Educativo Individualizado (PEI)",plain:"Tu Plan Especial de la Escuela",
+   def:"PEI significa Plan Educativo Individualizado. Es tu plan. Dice qu\u00e9 ayuda recibes en la escuela y qu\u00e9 aprender\u00e1s este a\u00f1o.",
+   example:"Tu PEI puede decir que tienes m\u00e1s tiempo en los ex\u00e1menes o que un maestro trabaja contigo uno a uno.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><rect x="4" y="2" width="20" height="24" rx="3" fill="#1B2A4A"/><rect x="7" y="8" width="14" height="2" rx="1" fill="#C8952A"/><rect x="7" y="12" width="10" height="2" rx="1" fill="#EDD690"/><rect x="7" y="16" width="12" height="2" rx="1" fill="#EDD690"/><rect x="7" y="20" width="8" height="2" rx="1" fill="#EDD690"/></svg>'},
+  {term:"Metas Anuales",plain:"Lo Que Aprender\u00e1s Este A\u00f1o",
+   def:"Las metas anuales son las cosas que tu equipo quiere que aprendas o hagas antes del final del a\u00f1o escolar. T\u00fa ayudas a escogerlas. Deben sentirse como un reto real.",
+   example:"Una meta puede decir: Para mayo, contar\u00e1s dinero y dar\u00e1s cambio en una tienda 8 de cada 10 veces.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="#1B2A4A" stroke-width="2.5"/><circle cx="14" cy="14" r="6" stroke="#C8952A" stroke-width="2"/><circle cx="14" cy="14" r="2.5" fill="#C8952A"/></svg>'},
+  {term:"Niveles Actuales de Rendimiento",plain:"C\u00f3mo Est\u00e1s Haciendo Las Cosas Ahora",
+   def:"Los niveles actuales le dicen a tu equipo lo que puedes hacer ahora mismo. Es como una foto de d\u00f3nde est\u00e1s antes de empezar a trabajar en nuevas metas.",
+   example:"Los niveles actuales pueden decir: Ahora puedes leer 50 palabras y contar hasta 100.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><rect x="3" y="18" width="4" height="8" rx="1" fill="#C8952A"/><rect x="9" y="12" width="4" height="14" rx="1" fill="#1B2A4A"/><rect x="15" y="7" width="4" height="19" rx="1" fill="#C8952A"/><rect x="21" y="3" width="4" height="23" rx="1" fill="#1B2A4A"/></svg>'},
+  {term:"Plan de Transici\u00f3n",plain:"Tu Plan Para Despu\u00e9s de la Escuela",
+   def:"El plan de transici\u00f3n es tu gu\u00eda para la vida despu\u00e9s de la escuela. Te ayuda a pensar en qu\u00e9 trabajo quieres, d\u00f3nde quieres vivir y qu\u00e9 escuela o entrenamiento viene despu\u00e9s.",
+   example:"Tu plan puede decir que quieres trabajar en un restaurante y tomar\u00e1s una clase de cocina para prepararte.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><path d="M4 22 L14 6 L24 22" stroke="#1B2A4A" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="6" r="2.5" fill="#C8952A"/><circle cx="24" cy="22" r="2.5" fill="#C8952A"/></svg>'},
+  {term:"Ambiente Menos Restrictivo (AMR)",plain:"D\u00f3nde Aprendes Mejor",
+   def:"Esto significa que debes aprender con todos los estudiantes tanto como sea posible. Tu escuela solo puede moverte a una clase separada si puede demostrar que te ayuda m\u00e1s.",
+   example:"Si puedes aprender matem\u00e1ticas en el sal\u00f3n regular con algo de ayuda, tu escuela debe mantenerte all\u00ed.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><rect x="3" y="8" width="22" height="16" rx="3" fill="#1B2A4A"/><path d="M9 8 V5 Q14 2 19 5 V8" stroke="#C8952A" stroke-width="2" fill="none"/><circle cx="14" cy="16" r="4" fill="#C8952A"/></svg>'},
+  {term:"Servicios Relacionados",plain:"Ayuda Extra Que Recibes en la Escuela",
+   def:"Los servicios relacionados son apoyos extra que te ayudan a aprender. Cosas como terapia del habla, terapia ocupacional o consej\u00eer\u00eda son servicios relacionados.",
+   example:"Puede que vayas a terapia del habla dos veces por semana. Ese es un servicio relacionado.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="10" r="6" fill="#1B2A4A"/><path d="M14 16 Q8 20 6 26 H22 Q20 20 14 16Z" fill="#C8952A"/></svg>'},
+  {term:"Acomodaciones",plain:"Cambios Que Te Ayudan a Aprender",
+   def:"Las acomodaciones son cambios que hacen m\u00e1s f\u00e1cil demostrar lo que sabes. No hacen el trabajo m\u00e1s simple. Solo te dan una oportunidad justa.",
+   example:"Tener m\u00e1s tiempo en un examen es una acomodaci\u00f3n. Tambi\u00e9n lo es tomar un examen en un cuarto tranquilo.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><rect x="5" y="5" width="18" height="18" rx="4" stroke="#1B2A4A" stroke-width="2.5"/><path d="M9 14 L12 17 L19 11" stroke="#C8952A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+  {term:"Autodeterminaci\u00f3n",plain:"T\u00fa Puedes Tomar Decisiones",
+   def:"La autodeterminaci\u00f3n significa que tienes el poder de tomar decisiones sobre tu propia vida. Puedes decir lo que quieres, en qu\u00e9 eres bueno y qu\u00e9 tipo de ayuda necesitas.",
+   example:"En tu reuni\u00f3n del PEI puedes decir: Aprendo mejor cuando puedo moverme. O: Quiero trabajar con animales despu\u00e9s de la escuela.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="8" r="5" fill="#C8952A"/><path d="M7 26 C7 19 21 19 21 26" fill="#1B2A4A"/><path d="M14 13 L14 20 M10 17 L18 17" stroke="#EDD690" stroke-width="2" stroke-linecap="round"/></svg>'},
+  {term:"Reuni\u00f3n del PEI",plain:"La Reuni\u00f3n de Tu Equipo",
+   def:"La reuni\u00f3n del PEI es donde tu equipo se re\u00fane para hablar de tu plan. Tu equipo incluye a ti, a tu padre o guardi\u00e1n, a tus maestros y al personal de la escuela.",
+   example:"En tu reuni\u00f3n del PEI puedes compartir lo que va bien, lo que es dif\u00edcil y lo que quieres aprender el pr\u00f3ximo a\u00f1o.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><circle cx="8" cy="9" r="4" fill="#1B2A4A"/><circle cx="20" cy="9" r="4" fill="#1B2A4A"/><circle cx="14" cy="7" r="4" fill="#C8952A"/><path d="M2 24 C2 18 14 18 14 24" fill="#1B2A4A"/><path d="M14 24 C14 18 26 18 26 24" fill="#1B2A4A"/></svg>'},
+  {term:"Metas Postsecundarias",plain:"Tus Sue\u00f1os Para el Futuro",
+   def:"Las metas postsecundarias son tus planes para despu\u00e9s de terminar la escuela. Hablan sobre el trabajo, m\u00e1s escuela o entrenamiento, y c\u00f3mo quieres vivir.",
+   example:"Tus metas postsecundarias pueden decir: Quiero conseguir un trabajo en una panader\u00eda y vivir en un apartamento con un compa\u00f1ero.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><polygon points="14,3 17,10 25,10 19,15 21,23 14,18 7,23 9,15 3,10 11,10" fill="#C8952A"/></svg>'},
+  {term:"Defensor",plain:"Alguien Que Habla Por Ti",
+   def:"Un defensor es una persona que ayuda a asegurarse de que se respeten tus derechos. T\u00fa puedes ser tu propio defensor. Tambi\u00e9n puedes pedirle a un padre, maestro o adulto de confianza que defienda por ti.",
+   example:"Si no entiendes algo en tu reuni\u00f3n del PEI puedes decir: \u00bfPuede explicarlo de una manera m\u00e1s simple? Eso es autodefensa.",
+   icon:'<svg viewBox="0 0 28 28" fill="none"><path d="M5 22 L5 10 Q5 5 10 5 L22 5 Q26 5 26 10 L26 17 Q26 21 22 21 L12 21 Z" fill="#1B2A4A"/><circle cx="10" cy="13" r="1.5" fill="#EDD690"/><circle cx="14" cy="13" r="1.5" fill="#EDD690"/><circle cx="18" cy="13" r="1.5" fill="#EDD690"/></svg>'}
+];
+
+const PARENT_SCENARIOS_ES = [
+  {t:"No entiende un t\u00e9rmino en la reuni\u00f3n",
+   d:"El equipo usa palabras como PLAAFP, SDI o AMR y sigue adelante. Se siente perdido pero no quiere retrasar las cosas.",
+   tip:"Use la pesta\u00f1a del Glosario para buscar cualquier t\u00e9rmino antes o durante la reuni\u00f3n.",
+   s:"\u00bfPuede explicar qu\u00e9 significa [t\u00e9rmino] en lenguaje sencillo antes de continuar?",
+   n:"Tiene derecho a una explicaci\u00f3n completa de cada parte del PEI. Pedir claridad no est\u00e1 retrasando las cosas \u2014 es hacer su trabajo como miembro del equipo."},
+  {t:"Una meta parece lo que su hijo ya hace",
+   d:"La meta anual propuesta refleja el nivel actual de su hijo sin expectativa real de crecimiento.",
+   tip:"El est\u00e1ndar Endrew F. (2017) requiere que las metas sean apropiadamente ambiciosas, no solo un poco m\u00e1s que el m\u00ednimo.",
+   s:"Bajo Endrew F. contra el Distrito Escolar del Condado de Douglas, el PEI de mi hijo debe ser apropiadamente ambicioso. Esta meta refleja d\u00f3nde ya est\u00e1n. Pido que se revise para reflejar un crecimiento significativo.",
+   n:"Documente su objeci\u00f3n por escrito. Pida la justificaci\u00f3n basada en datos del equipo para el nivel de desaf\u00edo de la meta."},
+  {t:"Le presionan para firmar el PEI hoy",
+   d:"La reuni\u00f3n est\u00e1 terminando y el equipo est\u00e1 empujando documentos hacia usted. No ha tenido tiempo de leer todo.",
+   s:"No estoy listo para firmar hoy. Me gustar\u00eda llevar el documento a casa y revisarlo cuidadosamente. \u00bfPodemos programar un seguimiento si tengo preguntas?",
+   n:"Nunca est\u00e1 obligado a firmar el d\u00eda de la reuni\u00f3n."},
+  {t:"Los servicios del PEI no est\u00e1n ocurriendo",
+   d:"Han pasado semanas desde que se firm\u00f3 el PEI y su hijo todav\u00eda no est\u00e1 recibiendo los servicios indicados.",
+   s:"He notado que [servicio espec\u00edfico] no se est\u00e1 proporcionando como est\u00e1 escrito en el PEI. Pido confirmaci\u00f3n por escrito de cu\u00e1ndo comenzar\u00e1 y c\u00f3mo se documentar\u00e1.",
+   n:"Env\u00ede esto por escrito. Un registro en papel es esencial si el problema escala."},
+  {t:"Desea solicitar una evaluaci\u00f3n independiente",
+   d:"No est\u00e1 de acuerdo con la evaluaci\u00f3n de la escuela y cree que no refleja con exactitud las habilidades de su hijo.",
+   s:"No estoy de acuerdo con la evaluaci\u00f3n de la escuela. Solicito formalmente una Evaluaci\u00f3n Educativa Independiente sin costo para m\u00ed, como es mi derecho bajo IDEA.",
+   n:"La escuela debe responder por escrito \u2014 ya sea pagando por la EEI o presentando un proceso formal para defender su evaluaci\u00f3n."}
+];
+
+// ── Language state ─────────────────────────────────────────────────────────
+let studentLang = 'en';
+let parentLang = 'en';
+const BANNER_EN = {title:'Your IEP \u2014 Your Voice', desc:'Your IEP is your plan. You have the right to be part of every meeting. This guide explains the most important words so you know what is happening and what to say.'};
+const BANNER_ES = {title:'Tu PEI \u2014 Tu Voz', desc:'Tu PEI es tu plan. Tienes el derecho de participar en cada reuni\u00f3n. Esta gu\u00eda explica las palabras m\u00e1s importantes para que sepas lo que est\u00e1 pasando y lo que puedes decir.'};
+
+function setStudentLang(lang, btn){
+  studentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const b = lang === 'es' ? BANNER_ES : BANNER_EN;
+  document.getElementById('sb-title').textContent = b.title;
+  document.getElementById('sb-desc').textContent = b.desc;
+  const readBtn = document.getElementById('sb-read-btn');
+  readBtn.textContent = lang === 'es' ? '\u25b6 Leer esto' : '\u25b6 Read This';
+  stopReading();
+  renderStudent();
+}
+
+function readStudentBanner(btn){
+  if(window.speechSynthesis.speaking){stopReading();btn.textContent = studentLang==='es' ? '\u25b6 Leer esto' : '\u25b6 Read This';return;}
+  const el = document.getElementById('student-banner-text');
+  btn.textContent = '\u25a0 ' + (studentLang==='es' ? 'Parar' : 'Stop');
+  const info = wrapWords(el); wordSpans.push(info);
+  const utt = new SpeechSynthesisUtterance(info.text);
+  utt.rate = 0.88;
+  utt.lang = studentLang === 'es' ? 'es-US' : 'en-US';
+  utt.onboundary = (e)=>{ if(e.name==='word') highlightWord(el,e.charIndex); };
+  utt.onend = utt.onerror = ()=>{ clearHighlights(); btn.textContent = studentLang==='es' ? '\u25b6 Leer esto' : '\u25b6 Read This'; };
+  window.speechSynthesis.speak(utt);
+}
+
+function setParentLang(lang, btn){
+  parentLang = lang;
+  document.querySelectorAll('.sc-lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const note = document.getElementById('parent-es-note');
+  if(note) note.classList.toggle('visible', lang==='es');
+  stopReading();
+  // Re-render parent scenario with correct language
+  renderParentScenario(lang);
+}
+
+function renderParentScenario(lang){
+  const scenarios = lang === 'es' ? PARENT_SCENARIOS_ES : ROLES.parent.scenarios;
+  const body = document.getElementById('parent-sc-body');
+  if(!body) return;
+  body.innerHTML = scenarios.map((sc,i)=>`
+    <div class="sc-card">
+      <div class="sc-t">${sc.t || sc.title}</div>
+      <div class="sc-d">${sc.d || sc.desc}</div>
+      ${(sc.tip)?`<div class="sc-tip">${sc.tip}</div>`:''}
+      ${(sc.s || sc.script)?`
+      <button class="wts-btn" id="wts-btn-parent-${i}" onclick="toggleScript('parent',${i})">
+        ${lang==='es' ? '&#x1F4AC; Qu\u00e9 decir' : '&#x1F4AC; What to say'}
+      </button>
+      <div class="wts-drawer" id="wts-drawer-parent-${i}">
+        <div class="wts-lbl">${lang==='es' ? 'Diga esto:' : 'Say this:'}</div>
+        <div class="wts-sc" id="wts-sc-parent-${i}">"${sc.s || sc.script}"</div>
+        ${(sc.n || sc.note)?`<div class="wts-nt" id="wts-nt-parent-${i}">\uD83D\uDCCC ${sc.n || sc.note}</div>`:''}
+        <button class="wts-rb" id="wts-rb-parent-${i}" onclick="readScript('parent',${i})">
+          \u25b6 ${lang==='es' ? 'Leer en voz alta' : 'Read aloud'}
+        </button>
+      </div>`:''}
+    </div>`).join('');
+}
+
+// INIT
+// ══════════════════════════════════════════════════════════
+renderGlossary();
+renderStudent();
+renderParentScenario('en');
+document.getElementById('endrew-content').innerHTML=ENDREW_HTML;
+document.getElementById('prep-content').innerHTML=PREP_HTML;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopReading();});
+</script>
+</body>
+</html>
